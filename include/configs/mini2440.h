@@ -45,6 +45,10 @@
 #define USE_920T_MMU		1
 #undef CONFIG_USE_IRQ			/* we don't need IRQ/FIQ stuff */
 
+#define CONFIG_CMDLINE_TAG	/* enable passing of ATAGs */
+#define CONFIG_SETUP_MEMORY_TAGS
+#define CONFIG_INITRD_TAG
+
 /*
  * Size of malloc() pool
  */
@@ -96,7 +100,6 @@
 #define CONFIG_CMD_CACHE
 #define CONFIG_CMD_DATE
 #define CONFIG_CMD_ELF
-
 
 #define CONFIG_BOOTDELAY	3
 #define CONFIG_BOOTARGS		"root=/dev/ram0 rdinit=linuxrc console=ttySAC0"

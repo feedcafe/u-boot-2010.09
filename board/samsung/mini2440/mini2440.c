@@ -104,8 +104,8 @@ int board_init (void)
 	gpio->GPHCON = 0x002AFAAA;
 	gpio->GPHUP = 0x000007FF;
 
-	/* arch number of SMDK2410-Board */
-	gd->bd->bi_arch_number = MACH_TYPE_SMDK2410;
+	/* arch number of MINI2440-Board */
+	gd->bd->bi_arch_number = MACH_TYPE_MINI2440;
 
 	/* adress of boot parameters */
 	gd->bd->bi_boot_params = 0x30000100;
