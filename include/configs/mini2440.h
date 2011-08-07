@@ -168,10 +168,10 @@
  * FLASH and environment organization
  */
 
-#define CONFIG_AMD_LV400	1	/* uncomment this if you have a LV400 flash */
 #if 0
-#define CONFIG_AMD_LV800	1	/* uncomment this if you have a LV800 flash */
+#define CONFIG_AMD_LV400	1	/* uncomment this if you have a LV400 flash */
 #endif
+#define CONFIG_AMD_LV800	1	/* uncomment this if you have a LV800 flash */
 
 #define CONFIG_SYS_MAX_FLASH_BANKS	1	/* max number of memory banks */
 #ifdef CONFIG_AMD_LV800
