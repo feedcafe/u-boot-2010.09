@@ -100,6 +100,8 @@
 #define CONFIG_CMD_CACHE
 #define CONFIG_CMD_DATE
 #define CONFIG_CMD_ELF
+#define	CONFIG_CMD_PING
+
 
 #define CONFIG_BOOTDELAY	3
 #define CONFIG_BOOTARGS		"root=/dev/ram0 rdinit=linuxrc console=ttySAC0"
@@ -135,6 +137,10 @@
 
 /* valid baudrates */
 #define CONFIG_SYS_BAUDRATE_TABLE	{ 9600, 19200, 38400, 57600, 115200 }
+
+/* command history and autocompletion */
+#define	CONFIG_CMDLINE_EDITING
+#define	CONFIG_AUTO_COMPLETE
 
 /*-----------------------------------------------------------------------
  * Stack sizes
