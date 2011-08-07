@@ -5,7 +5,7 @@
  * Gary Jennejohn <garyj@denx.de>
  * David Mueller <d.mueller@elsoft.ch>
  *
- * Configuation settings for the SAMSUNG SMDK2410 board.
+ * Configuation settings for the SAMSUNG SMDK2440 board.
  *
  * See file CREDITS for list of people who contributed to this
  * project.
@@ -35,11 +35,11 @@
  */
 #define CONFIG_ARM920T	1	/* This is an ARM920T Core	*/
 #define CONFIG_S3C24X0	1	/* in a SAMSUNG S3C24x0-type SoC	*/
-#define CONFIG_S3C2410	1	/* specifically a SAMSUNG S3C2410 SoC	*/
-#define CONFIG_SMDK2410	1	/* on a SAMSUNG SMDK2410 Board  */
+#define CONFIG_S3C2440	1	/* specifically a SAMSUNG S3C2440 SoC	*/
+#define CONFIG_SMDK2440	1	/* on a SAMSUNG SMDK2440 Board  */
 
 /* input clock of PLL */
-#define CONFIG_SYS_CLK_FREQ	12000000/* the SMDK2410 has 12MHz input clock */
+#define CONFIG_SYS_CLK_FREQ	12000000/* the SMDK2440 has 12MHz input clock */
 
 
 #define USE_920T_MMU		1
@@ -63,7 +63,7 @@
  * select serial console configuration
  */
 #define CONFIG_S3C24X0_SERIAL
-#define CONFIG_SERIAL1          1	/* we use SERIAL 1 on SMDK2410 */
+#define CONFIG_SERIAL1          1	/* we use SERIAL 1 on SMDK2440 */
 
 /************************************************************
  * RTC
@@ -114,7 +114,7 @@
  * Miscellaneous configurable options
  */
 #define	CONFIG_SYS_LONGHELP				/* undef to save memory		*/
-#define	CONFIG_SYS_PROMPT		"SMDK2410 # "	/* Monitor Command Prompt	*/
+#define	CONFIG_SYS_PROMPT		"SMDK2440 # "	/* Monitor Command Prompt	*/
 #define	CONFIG_SYS_CBSIZE		256		/* Console I/O Buffer Size	*/
 #define	CONFIG_SYS_PBSIZE (CONFIG_SYS_CBSIZE+sizeof(CONFIG_SYS_PROMPT)+16) /* Print Buffer Size */
 #define	CONFIG_SYS_MAXARGS		16		/* max number of command args	*/
@@ -179,5 +179,7 @@
 
 #define	CONFIG_ENV_IS_IN_FLASH	1
 #define CONFIG_ENV_SIZE		0x10000	/* Total Size of Environment Sector */
+
+#define	CONFIG_LL_INIT_NAND_ONLY
 
 #endif	/* __CONFIG_H */

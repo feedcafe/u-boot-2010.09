@@ -22,21 +22,21 @@
  */
 
 /************************************************
- * NAME	    : s3c2410.h
+ * NAME	    : s3c2440.h
  * Version  : 31.3.2003
  *
- * Based on S3C2410X User's manual Rev 1.1
+ * Based on S3C2440X User's manual Rev 1.1
  ************************************************/
 
-#ifndef __S3C2410_H__
-#define __S3C2410_H__
+#ifndef __S3C2440_H__
+#define __S3C2440_H__
 
 #define S3C24X0_UART_CHANNELS	3
 #define S3C24X0_SPI_CHANNELS	2
 
-/* S3C2410 only supports 512 Byte HW ECC */
-#define S3C2410_ECCSIZE		512
-#define S3C2410_ECCBYTES	3
+/* S3C2440 only supports 512 Byte HW ECC */
+#define S3C2440_ECCSIZE		512
+#define S3C2440_ECCBYTES	3
 
 enum s3c24x0_uarts_nr {
 	S3C24X0_UART0,
@@ -44,7 +44,7 @@ enum s3c24x0_uarts_nr {
 	S3C24X0_UART2
 };
 
-/* S3C2410 device base addresses */
+/* S3C2440 device base addresses */
 #define S3C24X0_MEMCTL_BASE		0x48000000
 #define S3C24X0_USB_HOST_BASE		0x49000000
 #define S3C24X0_INTERRUPT_BASE		0x4A000000
@@ -160,4 +160,4 @@ static inline struct s3c2410_sdi *s3c2410_get_base_sdi(void)
 	return (struct s3c2410_sdi *)S3C2410_SDI_BASE;
 }
 
-#endif /*__S3C2410_H__*/
+#endif /*__S3C2440_H__*/

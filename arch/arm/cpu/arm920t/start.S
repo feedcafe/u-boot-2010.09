@@ -138,12 +138,24 @@ copyex:
 #  define pWTCON	0x15300000
 #  define INTMSK	0x14400008	/* Interupt-Controller base addresses */
 #  define CLKDIVN	0x14800014	/* clock divisor register */
-#else
+#elif defined(CONFIG_S3C2410) || defined(CONFIG_S3C2440)
 #  define pWTCON	0x53000000
 #  define INTMSK	0x4A000008	/* Interupt-Controller base addresses */
 #  define INTSUBMSK	0x4A00001C
 #  define CLKDIVN	0x4C000014	/* clock divisor register */
 # endif
+
+#if defined(CONFIG_S3C2410)
+#  define INTSUBMSK_val	0x3ff
+#  define MPLLCON_val	((0x90 << 12) + (0x7 << 4) + 0x0)	/* 202.00 MHz */
+#  define UPLLCON_val	((0x78 << 12) + (0x2 << 4) + 0x3)
+#  define CLKDIVN_val	3 /* FCLK:HCLK:PCLK = 1:2:4 */
+#elif defined(CONFIG_S3C2440)
+#  define INTSUBMSK_val	0xffff
+#  define MPLLCON_val	((0x7f << 12) + (0x2 << 4) + 0x1)	/* 405.00 MHz */
+#  define UPLLCON_val	((0x38 << 12) + (0x2 << 4) + 0x2)
+#  define CLKDIVN_val	5 /* FCLK:HCLK:PCLK = 1:3:6 */
+#endif
 
 	ldr	r0, =pWTCON
 	mov	r1, #0x0
@@ -155,16 +167,46 @@ copyex:
 	mov	r1, #0xffffffff
 	ldr	r0, =INTMSK
 	str	r1, [r0]
-# if defined(CONFIG_S3C2410)
-	ldr	r1, =0x3ff
+
+# if defined(CONFIG_S3C2410) || defined(CONFIG_S3C2440)
+	ldr	r1, =INTSUBMSK_val
 	ldr	r0, =INTSUBMSK
 	str	r1, [r0]
 # endif
 
+	/* Clock asynchronous mode */
+	mrc	p15, 0, r1, c1, c0, 0
+	orr	r1, r1, #0xc0000000
+	mcr	p15, 0, r1, c1, c0, 0
+
+
+#define LOCKTIME	0x4c000000
+#define UPLLCON		0x4c000008
+
+	ldr	r0, =LOCKTIME
+	mov	r1, #0xffffff
+	str	r1, [r0]
+
+	ldr	r0, =UPLLCON
+	ldr	r1, =UPLLCON_val
+	str	r1, [r0]
+	
+	/* Page 7-19, seven nops between UPLL and MPLL */
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+
+	ldr	r1, =MPLLCON_val
+	str	r1, [r0, #-4]		/* MPLLCON */
+
 	/* FCLK:HCLK:PCLK = 1:2:4 */
 	/* default FCLK is 120 MHz ! */
 	ldr	r0, =CLKDIVN
-	mov	r1, #3
+	mov	r1, #CLKDIVN_val
 	str	r1, [r0]
 #endif	/* CONFIG_S3C24X0 */
 
@@ -173,15 +215,17 @@ copyex:
 	 * not when booting from ram!
 	 */
 #ifndef CONFIG_SKIP_LOWLEVEL_INIT
+# ifndef CONFIG_LL_INIT_NAND_ONLY
 	bl	cpu_init_crit
+# endif
 #endif
 
 #ifndef CONFIG_SKIP_RELOCATE_UBOOT
-relocate:				/* relocate U-Boot to RAM	    */
 	adr	r0, _start		/* r0 <- current position of code   */
+relocate:				/* relocate U-Boot to RAM	    */
 	ldr	r1, _TEXT_BASE		/* test if we run from flash or RAM */
 	cmp	r0, r1			/* don't reloc during debug         */
-	beq	stack_setup
+	beq	done_relocate	
 
 	ldr	r2, _armboot_start
 	ldr	r3, _bss_start
@@ -193,6 +237,14 @@ copy_loop:
 	stmia	r1!, {r3-r10}		/* copy to   target address [r1]    */
 	cmp	r0, r2			/* until source end addreee [r2]    */
 	ble	copy_loop
+
+	mov	r0, #0			/* flush v3/v4 cache	*/
+	mcr	p15, 0, r0, c7, c7, 0
+	ldr	pc, _done_relocate	/* jump to relocated code	    */
+_done_relocate:
+	.word	done_relocate
+done_relocate:
+
 #endif	/* CONFIG_SKIP_RELOCATE_UBOOT */
 
 	/* Set up the stack						    */
