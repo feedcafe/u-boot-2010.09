@@ -122,6 +122,9 @@ struct s3c24x0_clock_power {
 	u32	CLKCON;
 	u32	CLKSLOW;
 	u32	CLKDIVN;
+#ifdef	CONFIG_S3C2440
+	u32	CAMDIVN;
+#endif
 };
 
 
