@@ -2103,6 +2103,15 @@ omap730p2_cs3boot_config :	unconfig
 	fi;
 	@$(MKCONFIG) -n $@ -a omap730p2 arm arm926ejs omap730p2 ti omap
 
+smdk2400_config	:	unconfig
+	@$(MKCONFIG) $(@:_config=) arm arm920t smdk2400 samsung s3c24x0
+
+smdk2410_config	:	unconfig
+	@$(MKCONFIG) $(@:_config=) arm arm920t smdk2410 samsung s3c24x0
+
+mini2440_config	:	unconfig
+	@$(MKCONFIG) $(@:_config=) arm arm920t mini2440 samsung s3c24x0
+
 spear300_config \
 spear310_config \
 spear320_config :	unconfig
