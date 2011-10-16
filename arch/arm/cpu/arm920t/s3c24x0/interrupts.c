@@ -39,4 +39,12 @@ void do_irq (struct pt_regs *pt_regs)
 	struct s3c24x0_interrupt *irq = s3c24x0_get_base_interrupt();
 	u_int32_t intpnd = readl(&irq->INTPND);
 
+#ifdef CONFIG_USB_DEVICE
+	if (intpnd & BIT_USBD) {
+		s3c2410_udc_irq();
+		irq->SRCPND = BIT_USBD;
+		irq->INTPND = BIT_USBD;
+	}
+#endif /* USB_DEVICE */
+
 }

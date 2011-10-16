@@ -160,4 +160,49 @@ static inline struct s3c2410_sdi *s3c2410_get_base_sdi(void)
 	return (struct s3c2410_sdi *)S3C2410_SDI_BASE;
 }
 
+
+/* PENDING BIT */
+#define BIT_EINT0		(0x1)
+#define BIT_EINT1		(0x1<<1)
+#define BIT_EINT2		(0x1<<2)
+#define BIT_EINT3		(0x1<<3)
+#define BIT_EINT4_7		(0x1<<4)
+#define BIT_EINT8_23		(0x1<<5)
+#define BIT_BAT_FLT		(0x1<<7)
+#define BIT_TICK		(0x1<<8)
+#define BIT_WDT			(0x1<<9)
+#define BIT_TIMER0		(0x1<<10)
+#define BIT_TIMER1		(0x1<<11)
+#define BIT_TIMER2		(0x1<<12)
+#define BIT_TIMER3		(0x1<<13)
+#define BIT_TIMER4		(0x1<<14)
+#define BIT_UART2		(0x1<<15)
+#define BIT_LCD			(0x1<<16)
+#define BIT_DMA0		(0x1<<17)
+#define BIT_DMA1		(0x1<<18)
+#define BIT_DMA2		(0x1<<19)
+#define BIT_DMA3		(0x1<<20)
+#define BIT_SDI			(0x1<<21)
+#define BIT_SPI0		(0x1<<22)
+#define BIT_UART1		(0x1<<23)
+#define BIT_USBD		(0x1<<25)
+#define BIT_USBH		(0x1<<26)
+#define BIT_IIC			(0x1<<27)
+#define BIT_UART0		(0x1<<28)
+#define BIT_SPI1		(0x1<<29)
+#define BIT_RTC			(0x1<<30)
+#define BIT_ADC			(0x1<<31)
+#define BIT_ALLMSK		(0xFFFFFFFF)
+
+
+#define	S3C2410_MISCCR_USBDEV		(0<<3)
+#define	S3C2410_MISCCR_USBHOST		(1<<3)
+
+#define	S3C2410_MISCCR_USBSUSPND0	(1<<12)
+#define	S3C2410_MISCCR_USBSUSPND1	(1<<13)
+
+#define	S3C2410_CLKSLOW_UCLK_OFF	(1<<7)
+#define	S3C2410_CLKSLOW_MCLK_OFF	(1<<5)
+
+
 #endif /*__S3C2440_H__*/

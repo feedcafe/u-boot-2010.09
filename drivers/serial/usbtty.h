@@ -33,6 +33,8 @@
 #include <usb/musb_udc.h>
 #elif defined(CONFIG_PXA27X)
 #include <usb/pxa27x_udc.h>
+#elif defined(CONFIG_S3C2440)
+#include <usb/s3c2410_udc.h>
 #elif defined(CONFIG_SPEAR3XX) || defined(CONFIG_SPEAR600)
 #include <usb/spr_udc.h>
 #endif
