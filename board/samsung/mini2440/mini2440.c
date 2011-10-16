@@ -37,9 +37,9 @@ DECLARE_GLOBAL_DATA_PTR;
 #define M_MDIV	0xC3
 #define M_PDIV	0x4
 #define M_SDIV	0x1
-#elif FCLK_SPEED==1		/* Fout = 202.8MHz */
-#define M_MDIV	0xA1
-#define M_PDIV	0x3
+#elif FCLK_SPEED==1		/* Fout = 405 MHz */
+#define M_MDIV	0x7F
+#define M_PDIV	0x2
 #define M_SDIV	0x1
 #endif
 
@@ -50,8 +50,8 @@ DECLARE_GLOBAL_DATA_PTR;
 #define U_M_PDIV	0x3
 #define U_M_SDIV	0x1
 #elif USB_CLOCK==1
-#define U_M_MDIV	0x48
-#define U_M_PDIV	0x3
+#define U_M_MDIV	0x38
+#define U_M_PDIV	0x2
 #define U_M_SDIV	0x2
 #endif
 
@@ -91,8 +91,8 @@ int board_init (void)
 	gpio->GPACON = 0x007FFFFF;
 	gpio->GPBCON = 0x00044555;
 	gpio->GPBUP = 0x000007FF;
-	gpio->GPCCON = 0xAAAAAAAA;
-	gpio->GPCUP = 0x0000FFFF;
+	gpio->GPCCON = 0xAAAAA6AA;	/* GPC5 used as USB device enable */
+	gpio->GPCUP = 0x0000FFDF;
 	gpio->GPDCON = 0xAAAAAAAA;
 	gpio->GPDUP = 0x0000FFFF;
 	gpio->GPECON = 0xAAAAAAAA;

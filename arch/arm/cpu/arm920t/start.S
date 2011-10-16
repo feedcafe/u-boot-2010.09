@@ -245,6 +245,21 @@ _done_relocate:
 	.word	done_relocate
 done_relocate:
 
+#if defined(CONFIG_USE_IRQ) && defined(CONFIG_S3C2440)
+	/* In the case of the S3C2410, if we've somehow magically (JTAG, ...)
+	   ended up in RAM, then that ram is mapped to 0x30000000 and not 0.
+	   So we need to copy the interrupt vectors, etc.  */
+
+	mov	r0, #0
+	ldr	r1, _TEXT_BASE
+	mov	r2, #0x40
+irqvec_cpy_next:
+	ldr	r3, [r1], #4
+	str	r3, [r0], #4
+	subs	r2, r2, #4
+	bne	irqvec_cpy_next
+#endif /* CONFIG_USE_IRQ */
+
 #endif	/* CONFIG_SKIP_RELOCATE_UBOOT */
 
 	/* Set up the stack						    */

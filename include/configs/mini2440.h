@@ -43,7 +43,8 @@
 
 
 #define USE_920T_MMU		1
-#undef CONFIG_USE_IRQ			/* we don't need IRQ/FIQ stuff */
+//#undef CONFIG_USE_IRQ			/* we don't need IRQ/FIQ stuff */
+#define CONFIG_USE_IRQ
 
 #define CONFIG_CMDLINE_TAG	/* enable passing of ATAGs */
 #define CONFIG_SETUP_MEMORY_TAGS
@@ -104,13 +105,15 @@
 
 #define	CONFIG_USB_DEVICE
 #define	CONFIG_USB_TTY
+//#define	CONFIG_SYS_CONSOLE_IS_IN_ENV
 #define	CONFIG_USBD_VENDORID		0x1457	/* Linux/NetChip */
-#define	CONFIG_USBD_PRODUCT_GSERIAL	0x5120	/* gserial */
-#define	CONFIG_USBD_PRODUCT_CDCACM	0x5119	/* CDC ACM */
+#define	CONFIG_USBD_PRODUCTID_GSERIAL	0x5120	/* gserial */
+#define	CONFIG_USBD_PRODUCTID_CDCACM	0x5119	/* CDC ACM */
 #define	CONFIG_USBD_MANUFACTURER	"OpenMoko, Inc"
 #define	CONFIG_USBD_PRODUCT_NAME	"MINI2440 Bootloader " U_BOOT_VERSION
-#define	CONFIG_EXTRA_ENV_SETTINGS	"usbtty=cdc_acm\0"
-
+#define	CONFIG_EXTRA_ENV_SETTINGS	\
+		"usbtty=cdc_acm\0"	\
+		"stderr=usbtty\0stdout=usbtty\0stdin=usbtty\0"
 
 #define CONFIG_BOOTDELAY	3
 #define CONFIG_BOOTARGS		"root=/dev/ram0 rdinit=linuxrc console=ttySAC0"

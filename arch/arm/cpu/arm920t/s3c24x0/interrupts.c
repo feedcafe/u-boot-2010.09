@@ -33,6 +33,7 @@
 
 #include <asm/arch/s3c24x0_cpu.h>
 #include <asm/proc-armv/ptrace.h>
+#include <asm/io.h>
 
 void do_irq (struct pt_regs *pt_regs)
 {
@@ -48,3 +49,11 @@ void do_irq (struct pt_regs *pt_regs)
 #endif /* USB_DEVICE */
 
 }
+
+
+#if defined(CONFIG_USE_IRQ) && defined(CONFIG_S3C2440)
+int arch_interrupt_init (void)
+{
+	return 0;
+}
+#endif
