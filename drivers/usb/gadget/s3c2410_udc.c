@@ -417,7 +417,7 @@ static void s3c2410_udc_epn(int ep)
 			if (fifo_count < endpoint->rcv_packetSize)
 				is_last = 1;
 
-			debug("fifo_count=%u is_last=%, urb_avail=%u\n",
+			debug("fifo_count=%u is_last=d%, urb_avail=%u\n",
 				fifo_count, is_last, urb_avail);
 
 			if (fifo_count < urb_avail)
