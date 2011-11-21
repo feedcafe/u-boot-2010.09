@@ -349,7 +349,6 @@ static void s3c2410_udc_ep0(void)
 	}
 }
 
-
 static void s3c2410_udc_epn(int ep)
 {
 	struct usb_endpoint_instance *endpoint;
@@ -417,7 +416,7 @@ static void s3c2410_udc_epn(int ep)
 			if (fifo_count < endpoint->rcv_packetSize)
 				is_last = 1;
 
-			debug("fifo_count=%u is_last=d%, urb_avail=%u\n",
+			debug("fifo_count=%u is_last=%d, urb_avail=%u\n",
 				fifo_count, is_last, urb_avail);
 
 			if (fifo_count < urb_avail)
@@ -512,7 +511,6 @@ void s3c2410_udc_irq(void)
 /*
  * Start of public functions.
  */
-
 /* Called to start packet transmission. */
 int udc_endpoint_write (struct usb_endpoint_instance *endpoint)
 {
@@ -525,6 +523,8 @@ int udc_endpoint_write (struct usb_endpoint_instance *endpoint)
 		u32 ep_csr1;
 		debug_urb_buffer("We have an URB, transmitting", endpoint);
 
+		/* FIXME why need this delay */
+		udelay(5000);
 		s3c2410_write_noniso_tx_fifo(endpoint);
 
 		S3C2410_UDC_SETIX(epnum);

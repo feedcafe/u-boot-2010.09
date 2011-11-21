@@ -105,7 +105,7 @@
 
 #define	CONFIG_USB_DEVICE
 #define	CONFIG_USB_TTY
-//#define	CONFIG_SYS_CONSOLE_IS_IN_ENV
+#define	CONFIG_SYS_CONSOLE_IS_IN_ENV
 #define	CONFIG_USBD_VENDORID		0x1457	/* Linux/NetChip */
 #define	CONFIG_USBD_PRODUCTID_GSERIAL	0x5120	/* gserial */
 #define	CONFIG_USBD_PRODUCTID_CDCACM	0x5119	/* CDC ACM */
@@ -115,7 +115,7 @@
 		"usbtty=cdc_acm\0"	\
 		"stderr=usbtty\0stdout=usbtty\0stdin=usbtty\0"
 
-#define CONFIG_BOOTDELAY	3
+#define CONFIG_BOOTDELAY	9
 #define CONFIG_BOOTARGS		"root=/dev/ram0 rdinit=linuxrc console=ttySAC0"
 #define CONFIG_ETHADDR		00:19:87:07:27:15
 #define CONFIG_NETMASK          255.255.255.0
