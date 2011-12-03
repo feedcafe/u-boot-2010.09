@@ -442,6 +442,11 @@ extern void davinci_eth_set_mac_addr (const u_int8_t *addr);
 	reset_phy();
 #endif
 #endif
+
+#ifdef CONFIG_USB_LED
+	usb_led_init();
+#endif
+
 	/* main_loop() can return to retry autoboot, if so just run it again. */
 	for (;;) {
 		main_loop ();
