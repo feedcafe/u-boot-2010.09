@@ -40,6 +40,27 @@ static struct usb_interface_instance interface_instance[MAX_INTERFACES];
 /* one extra for control endpoint */
 static struct usb_endpoint_instance endpoint_instance[NUM_ENDPOINTS+1];
 
+/*
+ * Serial number
+ */
+static char serial_number[16] = "usb led test";
+
+
+/*
+ * Descriptors, Strings, Local variables.
+ */
+
+/* defined and used by gadget/ep0.c */
+extern struct usb_string_descriptor **usb_strings;
+
+static struct usb_string_descriptor *usbled_string_tbl[STR_COUNT];
+
+/* USB Descriptor Strings */
+static u8 wstrLang[4] = {4, USB_DT_STRING, 0x9, 0x4};
+static u8 wstrManufacturer[2 + 2*(sizeof(CONFIG_USBD_MANUFACTURER)-1)];
+static u8 wstrProduct[2 + 2*(sizeof(CONFIG_USBD_PRODUCT_NAME)-1)];
+static u8 wstrSerial[2 + 2*(sizeof(serial_number)-1)];
+
 
 /* Standard USB Data Structures */
 static struct usb_interface_descriptor interface_descriptors[MAX_INTERFACES];
@@ -78,6 +99,21 @@ static void usb_led_init_strings(void);
 static void usb_led_init_instances(void);
 static void usb_led_init_endpoints(void);
 
+/* utility function for converting char* to wide string used by USB */
+static void str2wide(char *str, u16 * wide)
+{
+	int i;
+	for (i = 0; i < strlen (str) && str[i]; i++){
+		#if defined(__LITTLE_ENDIAN)
+			wide[i] = (u16) str[i];
+		#elif defined(__BIG_ENDIAN)
+			wide[i] = ((u16)(str[i])<<8);
+		#else
+			#error "__LITTLE_ENDIAN or __BIG_ENDIAN undefined"
+		#endif
+	}
+}
+
 int usb_led_init(void)
 {
 	int rc;
@@ -96,6 +132,31 @@ int usb_led_init(void)
 
 static void usb_led_init_strings(void)
 {
+	struct usb_string_descriptor *string;
+
+	usbled_string_tbl[STR_LANG] =
+		(struct usb_string_descriptor*)wstrLang;
+
+	string = (struct usb_string_descriptor *) wstrManufacturer;
+	string->bLength = sizeof(wstrManufacturer);
+	string->bDescriptorType = USB_DT_STRING;
+	str2wide(CONFIG_USBD_MANUFACTURER, string->wData);
+	usbled_string_tbl[STR_MANUFACTURER] = string;
+
+	string = (struct usb_string_descriptor *) wstrProduct;
+	string->bLength = sizeof(wstrProduct);
+	string->bDescriptorType = USB_DT_STRING;
+	str2wide(CONFIG_USBD_PRODUCT_NAME, string->wData);
+	usbled_string_tbl[STR_PRODUCT] = string;
+
+	string = (struct usb_string_descriptor *) wstrSerial;
+	string->bLength = sizeof(wstrSerial);
+	string->bDescriptorType = USB_DT_STRING;
+	str2wide(serial_number, string->wData);
+	usbled_string_tbl[STR_SERIAL] = string;
+
+	/* Now, initialize the string table for ep0 handling */
+	usb_strings = usbled_string_tbl;
 
 }
 
