@@ -30,8 +30,8 @@
 //#include <asm/gpio.h>
 
 #define NUM_CONFIGS	1
-#define MAX_INTERFACES	2
-#define NUM_ENDPOINTS	2
+#define MAX_INTERFACES	1
+#define NUM_ENDPOINTS	1
 
 static struct usb_device_instance device_instance[1];
 static struct usb_bus_instance bus_instance[1];
@@ -63,8 +63,6 @@ static u8 wstrSerial[2 + 2*(sizeof(serial_number)-1)];
 
 
 /* Standard USB Data Structures */
-static struct usb_interface_descriptor interface_descriptors[MAX_INTERFACES];
-static struct usb_endpoint_descriptor *ep_descriptor_ptrs[NUM_ENDPOINTS];
 static struct usb_device_descriptor device_descriptor = {
 	.bLength = sizeof(struct usb_device_descriptor),
 	.bDescriptorType =	USB_DT_DEVICE,
@@ -81,15 +79,49 @@ static struct usb_device_descriptor device_descriptor = {
 	.bNumConfigurations =	NUM_CONFIGS
 };
 
-static struct usb_configuration_descriptor config_descriptor = {
-	.bLength = sizeof(struct usb_configuration_descriptor),
-	.bDescriptorType =	USB_DT_CONFIG,
-	.wTotalLength =		cpu_to_le16(sizeof(struct usb_configuration_descriptor)),
-	.bNumInterfaces =	0,
-	.bConfigurationValue =	1,
-	.iConfiguration	=	0,
-	.bmAttributes =		BMATTRIBUTE_SELF_POWERED | BMATTRIBUTE_RESERVED,
-	.bMaxPower =		USBLED_MAXPOWER,	/* unit: 2mA */
+struct usbled_config_desc {
+	struct usb_configuration_descriptor config_desc;
+
+	struct usb_interface_descriptor interface_desc;
+	struct usb_endpoint_descriptor endpoint_desc;
+} __attribute__((packed));
+
+static struct usbled_config_desc led_configuration_descriptors[NUM_CONFIGS] = {
+	{
+		.config_desc = {
+			.bLength = sizeof(struct usb_configuration_descriptor),
+			.bDescriptorType	= USB_DT_CONFIG,
+			.wTotalLength		=
+				cpu_to_le16(sizeof(struct usbled_config_desc)),
+			.bNumInterfaces		= 1,
+			.bConfigurationValue	= 1,
+			.iConfiguration		= 0,
+			.bmAttributes		=
+				BMATTRIBUTE_SELF_POWERED | BMATTRIBUTE_RESERVED,
+			.bMaxPower		= USBLED_MAXPOWER,	/* unit: 2mA */
+		},
+		.interface_desc = {
+			.bLength = sizeof(struct usb_interface_descriptor),
+			.bDescriptorType	= USB_DT_INTERFACE,
+			.bInterfaceNumber	= 0,
+			.bAlternateSetting	= 0,
+			.bNumEndpoints		= 0x01,
+			.bInterfaceClass	= 0,
+			.bInterfaceSubClass	= 0,
+			.bInterfaceProtocol	= 0,
+			.iInterface		= 0,
+		},
+		.endpoint_desc = {
+			.bLength		=
+				sizeof(struct usb_endpoint_descriptor),
+			.bDescriptorType	= USB_DT_ENDPOINT,
+			.bEndpointAddress	= UDC_INT_ENDPOINT | USB_DIR_IN,
+			.bmAttributes		= USB_ENDPOINT_XFER_INT,
+			.wMaxPacketSize		=
+				cpu_to_le16(CONFIG_USBD_LED_INT_PKTSIZE),
+			.bInterval		= 0xFF,
+		},
+	},
 };
 
 /*
@@ -116,16 +148,12 @@ static void str2wide(char *str, u16 * wide)
 
 int usb_led_init(void)
 {
-	int rc;
-
 	udc_init();	/* Basic USB initialization */
 	usb_led_init_strings();
 	usb_led_init_instances();
 	udc_startup_events(device_instance);	/* Enable dev, init udc pointers */
 	udc_connect();	/* Enable pullup for host detection */
-#if 0
 	usb_led_init_endpoints();
-#endif
 
 	return 0;
 }
@@ -162,8 +190,6 @@ static void usb_led_init_strings(void)
 
 static void usb_led_init_instances(void)
 {
-	int i;
-
 	/* initialize device instance */
 	memset (device_instance, 0, sizeof (struct usb_device_instance));
 	device_instance->device_state = STATE_INIT;
@@ -196,7 +222,9 @@ static void usb_led_init_instances(void)
 	memset (config_instance, 0,
 		sizeof (struct usb_configuration_instance));
 	//config_instance->interfaces = interface_count;
-	config_instance->configuration_descriptor = &config_descriptor;
+	config_instance->configuration_descriptor =
+			(struct usb_configuration_descriptor *)
+			&led_configuration_descriptors;
 	config_instance->interface_instance_array = interface_instance;
 }
 
