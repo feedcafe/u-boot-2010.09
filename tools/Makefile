@@ -62,6 +62,7 @@ BIN_FILES-$(CONFIG_CMD_NET) += gen_eth_addr$(SFX)
 BIN_FILES-$(CONFIG_CMD_LOADS) += img2srec$(SFX)
 BIN_FILES-$(CONFIG_INCA_IP) += inca-swap-bytes$(SFX)
 BIN_FILES-y += mkimage$(SFX)
+BIN_FILES-$(CONFIG_USB_LED) += usbled$(SFX)
 BIN_FILES-$(CONFIG_NETCONSOLE) += ncb$(SFX)
 BIN_FILES-$(CONFIG_SHA1_CHECK_UB_IMG) += ubsha1$(SFX)
 
@@ -84,6 +85,7 @@ OBJ_FILES-$(CONFIG_INCA_IP) += inca-swap-bytes.o
 NOPED_OBJ_FILES-y += kwbimage.o
 NOPED_OBJ_FILES-y += imximage.o
 NOPED_OBJ_FILES-y += mkimage.o
+NOPED_OBJ_FILES-$(CONFIG_USB_LED) += usbled.o
 OBJ_FILES-$(CONFIG_NETCONSOLE) += ncb.o
 NOPED_OBJ_FILES-y += os_support.o
 OBJ_FILES-$(CONFIG_SHA1_CHECK_UB_IMG) += ubsha1.o
@@ -182,6 +184,10 @@ $(obj)mkimage$(SFX):	$(obj)crc32.o \
 			$(obj)sha1.o \
 			$(LIBFDT_OBJS)
 	$(HOSTCC) $(HOSTCFLAGS) $(HOSTLDFLAGS) -o $@ $^
+	$(HOSTSTRIP) $@
+
+$(obj)usbled$(SFX):	$(obj)usbled.o
+	$(HOSTCC) $(HOSTCFLAGS) -lusb $(HOSTLDFLAGS) -o $@ $^
 	$(HOSTSTRIP) $@
 
 $(obj)mpc86x_clk$(SFX):	$(obj)mpc86x_clk.o
