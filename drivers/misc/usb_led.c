@@ -2,7 +2,19 @@
  * Copyright (C) 2011
  * Bai <fudongbai@gmail.com>
  *
- * Based on driver/serial/usbtty.c
+ * Based on driver/serial/usbtty.c which is
+ *
+ * (C) Copyright 2003
+ * Gerry Hamel, geh@ti.com, Texas Instruments
+ *
+ * (C) Copyright 2006
+ * Bryan O'Donoghue, bodonoghue@codehermit.ie
+ *
+ * Our four on-board LEDs are controlled by host-side usbled driver
+ * through endpoint 0, the original driver is:
+ * kernel/drivers/usb/misc/usbled.c
+ *
+ * Written by Greg Kroah-Hartman (greg@kroah.com)
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,13 +33,17 @@
  */
 
 #include <common.h>
+#include <asm/arch/s3c24x0_cpu.h>
+#include <asm/io.h>
+
 #include <usbdevice.h>
 
 #include "usb_led.h"
 
-/* FIXME no gpio implemetation on S3C2440 */
-#include <status_led.h>
-//#include <asm/gpio.h>
+#ifdef DEBUG
+#undef debug
+#define debug(fmt,args...)	serial_printf (fmt ,##args)
+#endif
 
 #define NUM_CONFIGS	1
 #define MAX_INTERFACES	1
@@ -130,6 +146,10 @@ static struct usbled_config_desc led_configuration_descriptors[NUM_CONFIGS] = {
 static void usb_led_init_strings(void);
 static void usb_led_init_instances(void);
 static void usb_led_init_endpoints(void);
+static void usb_led_event_handler(struct usb_device_instance *device,
+				usb_device_event_t event, int data);
+static int usb_led_cdc_setup(struct usb_device_request *request,
+				struct urb *urb);
 
 /* utility function for converting char* to wide string used by USB */
 static void str2wide(char *str, u16 * wide)
@@ -194,8 +214,8 @@ static void usb_led_init_instances(void)
 	memset (device_instance, 0, sizeof (struct usb_device_instance));
 	device_instance->device_state = STATE_INIT;
 	device_instance->device_descriptor = &device_descriptor;
-	//device_instance->event = usbled_event_handler;
-	//device_instance->cdc_recv_setup = usbled_cdc_setup;
+	device_instance->event = usb_led_event_handler;
+	device_instance->cdc_recv_setup = usb_led_cdc_setup;
 	device_instance->bus = bus_instance;
 	device_instance->configurations = NUM_CONFIGS;
 	device_instance->configuration_instance_array = config_instance;
@@ -237,3 +257,53 @@ static void usb_led_init_endpoints(void)
 		udc_setup_ep (device_instance, i, &endpoint_instance[i]);
 	}
 }
+
+/*************************************************************************/
+
+static void usb_led_event_handler(struct usb_device_instance *device,
+				  usb_device_event_t event, int data)
+{
+	switch (event) {
+	case VR_CTRL_USB_LED:
+		debug("%s: line %d\n", __func__, __LINE__);
+		break;
+	default:
+		debug("%s: line %d\n", __func__, __LINE__);
+		break;
+	}
+}
+
+/*************************************************************************/
+
+int usb_led_on(struct usb_device_request *request)
+{
+	struct s3c24x0_gpio * const gpio = s3c24x0_get_base_gpio();
+	short val;
+
+	val = le16_to_cpu(request->wIndex);
+
+	debug("%s: data: %#x, %#x\n", __func__, val, (~val << 5));
+
+	writel(~val << 5, &gpio->GPBDAT);
+
+	debug("%s: read data: %#x\n", __func__, readl(&gpio->GPBDAT));
+
+	return 0;
+}
+
+/*************************************************************************/
+
+/* We handle Vendor request here, is there a better way to do this? */
+int usb_led_cdc_setup(struct usb_device_request *request, struct urb *urb)
+{
+	switch (request->bRequest) {
+	case VR_CTRL_USB_LED:
+		usb_led_on(request);
+		break;
+	default:
+		return 1;
+	}
+	return 0;
+}
+
+/*************************************************************************/

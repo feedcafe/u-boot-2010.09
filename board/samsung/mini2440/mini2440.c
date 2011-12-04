@@ -89,7 +89,7 @@ int board_init (void)
 
 	/* set up the I/O ports */
 	gpio->GPACON = 0x007FFFFF;
-	gpio->GPBCON = 0x00044555;
+	gpio->GPBCON = 0x00055555;	/* GPB5~GPB8 as LED1~LED4 */
 	gpio->GPBUP = 0x000007FF;
 	gpio->GPCCON = 0xAAAAA6AA;	/* GPC5 used as USB device enable */
 	gpio->GPCUP = 0x0000FFDF;

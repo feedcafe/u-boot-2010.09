@@ -68,4 +68,7 @@
 #define STR_CTRL_INTERFACE	0x06
 #define STR_COUNT		0x07
 
+/* Vendor Request */
+#define VR_CTRL_USB_LED		0x12
+
 #endif
