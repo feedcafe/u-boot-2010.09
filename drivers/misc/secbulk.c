@@ -308,6 +308,11 @@ static void secbulk_event_handler(struct usb_device_instance *device,
 				  usb_device_event_t event, int data)
 {
 	switch (event) {
+	case DEVICE_ADDRESS_ASSIGNED:
+		/* after usb reset, endpoints must be reconfigured */
+		debug("%s: event: %d\n", __func__, event);
+		secbulk_init_endpoints();
+		break;
 	default:
 		debug("%s: event: %d\n", __func__, event);
 		break;
