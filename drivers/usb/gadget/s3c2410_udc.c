@@ -431,8 +431,10 @@ static void s3c2410_udc_epn(int ep)
 			 * Once the MCU reads the packet from FIFO,
 			 * this bit should be cleared
 			 */
+#ifndef AUTO_CLEAR 
 			outl(ep_csr1 & ~S3C2410_UDC_OCSR1_PKTRDY,
 				     S3C2410_UDC_OUT_CSR1_REG);
+#endif
 
 			usbd_rcv_complete(endpoint, urb_avail, 0);
 		}
@@ -600,7 +602,11 @@ void udc_setup_ep (struct usb_device_instance *device,
 			outl(0, S3C2410_UDC_IN_CSR2_REG);
 			outl(S3C2410_UDC_OCSR1_FFLUSH|S3C2410_UDC_OCSR1_CLRDT,
 			     S3C2410_UDC_OUT_CSR1_REG);
+#ifdef AUTO_CLEAR
+			outl(S3C2410_UDC_OCSR2_AUTOCLR, S3C2410_UDC_OUT_CSR2_REG);
+#else
 			outl(0, S3C2410_UDC_OUT_CSR2_REG);
+#endif
 			packet_size = endpoint->rcv_packetSize;
 			attributes = endpoint->rcv_attributes;
 		}
