@@ -417,7 +417,7 @@ static void s3c2410_udc_epn(int ep)
 			if (fifo_count < endpoint->rcv_packetSize)
 				is_last = 1;
 
-			debug("fifo_count=%u is_last=%d, urb_avail=%u\n",
+			debugX("fifo_count=%u is_last=%d, urb_avail=%u\n",
 				fifo_count, is_last, urb_avail);
 
 			if (fifo_count < urb_avail)
@@ -426,8 +426,12 @@ static void s3c2410_udc_epn(int ep)
 			for (i = 0; i < urb_avail; i++)
 				*cp++ = inb(ep_fifo_reg[ep]);
 
-			if (is_last)
-				outl(ep_csr1 & ~S3C2410_UDC_OCSR1_PKTRDY,
+			/* if (is_last) */
+			/*
+			 * Once the MCU reads the packet from FIFO,
+			 * this bit should be cleared
+			 */
+			outl(ep_csr1 & ~S3C2410_UDC_OCSR1_PKTRDY,
 				     S3C2410_UDC_OUT_CSR1_REG);
 
 			usbd_rcv_complete(endpoint, urb_avail, 0);
