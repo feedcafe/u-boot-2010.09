@@ -210,6 +210,8 @@ static void secbulk_init_strings(void)
 
 static void secbulk_init_instances(void)
 {
+	int i;
+
 	/* initialize device instance */
 	memset (device_instance, 0, sizeof (struct usb_device_instance));
 	device_instance->device_state = STATE_INIT;
@@ -226,7 +228,15 @@ static void secbulk_init_instances(void)
 	bus_instance->endpoint_array = endpoint_instance;
 	bus_instance->max_endpoints = 1;
 	bus_instance->maxpacketsize = 64;
-	//bus_instance->serial_number_str = serial_number;
+
+	/* configuration instance */
+	memset (config_instance, 0,
+		sizeof (struct usb_configuration_instance));
+	//config_instance->interfaces = interface_count;
+	config_instance->configuration_descriptor =
+			(struct usb_configuration_descriptor *)
+			&secbulk_configuration_descriptors;
+	config_instance->interface_instance_array = interface_instance;
 
 	/* endpoint instances */
 	memset (&endpoint_instance[0], 0,
@@ -238,14 +248,48 @@ static void secbulk_init_instances(void)
 	endpoint_instance[0].tx_attributes = USB_ENDPOINT_XFER_CONTROL;
 	udc_setup_ep (device_instance, 0, &endpoint_instance[0]);
 
-	/* configuration instance */
-	memset (config_instance, 0,
-		sizeof (struct usb_configuration_instance));
-	//config_instance->interfaces = interface_count;
-	config_instance->configuration_descriptor =
-			(struct usb_configuration_descriptor *)
-			&secbulk_configuration_descriptors;
-	config_instance->interface_instance_array = interface_instance;
+	ep_descriptor_ptrs[0] =
+		&secbulk_configuration_descriptors[0].data_endpoints[0];
+	ep_descriptor_ptrs[1] =
+		&secbulk_configuration_descriptors[0].data_endpoints[1];
+
+	for (i = 1; i <= NUM_ENDPOINTS; i++) {
+		memset (&endpoint_instance[i], 0,
+			sizeof (struct usb_endpoint_instance));
+
+		endpoint_instance[i].endpoint_address =
+			ep_descriptor_ptrs[i - 1]->bEndpointAddress;
+
+		endpoint_instance[i].rcv_attributes =
+			ep_descriptor_ptrs[i - 1]->bmAttributes;
+
+		endpoint_instance[i].rcv_packetSize =
+			le16_to_cpu(ep_descriptor_ptrs[i - 1]->wMaxPacketSize);
+
+		endpoint_instance[i].tx_attributes =
+			ep_descriptor_ptrs[i - 1]->bmAttributes;
+
+		endpoint_instance[i].tx_packetSize =
+			le16_to_cpu(ep_descriptor_ptrs[i - 1]->wMaxPacketSize);
+
+		endpoint_instance[i].tx_attributes =
+			ep_descriptor_ptrs[i - 1]->bmAttributes;
+
+		urb_link_init (&endpoint_instance[i].rcv);
+		urb_link_init (&endpoint_instance[i].rdy);
+		urb_link_init (&endpoint_instance[i].tx);
+		urb_link_init (&endpoint_instance[i].done);
+
+		if (endpoint_instance[i].endpoint_address & USB_DIR_IN)
+			endpoint_instance[i].tx_urb =
+				usbd_alloc_urb (device_instance,
+						&endpoint_instance[i]);
+		else
+			endpoint_instance[i].rcv_urb =
+				usbd_alloc_urb (device_instance,
+						&endpoint_instance[i]);
+	}
+
 }
 
 static void secbulk_init_endpoints(void)
@@ -265,7 +309,7 @@ static void secbulk_event_handler(struct usb_device_instance *device,
 {
 	switch (event) {
 	default:
-		debug("%s: line %d\n", __func__, __LINE__);
+		debug("%s: event: %d\n", __func__, event);
 		break;
 	}
 }
