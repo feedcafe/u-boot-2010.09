@@ -447,6 +447,10 @@ extern void davinci_eth_set_mac_addr (const u_int8_t *addr);
 	usb_led_init();
 #endif
 
+#ifdef CONFIG_S3C24X0_SECBULK
+	secbulk_init();
+#endif
+
 	/* main_loop() can return to retry autoboot, if so just run it again. */
 	for (;;) {
 		main_loop ();
