@@ -261,7 +261,7 @@
 #endif
 
 /* S3C2410 Endpoint parameters */
-#define EP0_MAX_PACKET_SIZE	16
+#define EP0_MAX_PACKET_SIZE	8	/* For EP0, MAXP=8 is recommended */
 #define UDC_OUT_ENDPOINT 	2
 #define UDC_OUT_PACKET_SIZE	64
 #define UDC_IN_ENDPOINT		3
