@@ -397,7 +397,7 @@ static void s3c2410_udc_epn(int ep)
 	} else {
 		/* OUT transfer (host to device) */
 		ep_csr1 = inl(S3C2410_UDC_OUT_CSR1_REG);
-		debugX("for ep=%u, OUT_CSR1=0x%x ", ep, ep_csr1);
+		debug("for ep=%u, OUT_CSR1=0x%x ", ep, ep_csr1);
 
 		urb = endpoint->rcv_urb;
 		if (ep_csr1 & S3C2410_UDC_OCSR1_SENTSTL) {
@@ -416,7 +416,7 @@ static void s3c2410_udc_epn(int ep)
 			if (fifo_count < endpoint->rcv_packetSize)
 				is_last = 1;
 
-			debugX("fifo_count=%u is_last=%d, urb_avail=%u\n",
+			debug("fifo_count=%u is_last=%d, urb_avail=%u\n",
 				fifo_count, is_last, urb_avail);
 
 			if (fifo_count < urb_avail)
