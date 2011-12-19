@@ -175,8 +175,6 @@ static void udc_set_address(unsigned char address)
 	outl(address, S3C2410_UDC_FUNC_ADDR_REG);
 }
 
-extern struct usb_device_descriptor device_descriptor;
-
 static void s3c2410_udc_ep0(void)
 {
 	u_int8_t ep0csr;
