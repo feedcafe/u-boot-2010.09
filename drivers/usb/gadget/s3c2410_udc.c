@@ -402,6 +402,7 @@ static void s3c2410_udc_epn(int ep)
 		urb = endpoint->rcv_urb;
 		if (ep_csr1 & S3C2410_UDC_OCSR1_SENTSTL) {
 			/* Stall handshake */
+			debugX("SENT STALL\n");
 			outl(0x00, S3C2410_UDC_IN_CSR1_REG);
 			return;
 		}
@@ -435,6 +436,10 @@ static void s3c2410_udc_epn(int ep)
 #endif
 
 			usbd_rcv_complete(endpoint, urb_avail, 0);
+			/* FIXME is there a better way to notify that,
+			 * we have got data */
+			usbd_device_event_irq(udc_device,
+						DEVICE_FUNCTION_PRIVATE, 0);
 		}
 	}
 

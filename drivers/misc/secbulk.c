@@ -44,6 +44,9 @@
 #define MAX_INTERFACES	1
 #define NUM_ENDPOINTS	2
 
+volatile u32 download_addr;
+volatile u32 count;
+
 /*
  * Instance variables
  */
@@ -156,6 +159,7 @@ static void secbulk_event_handler(struct usb_device_instance *device,
 				usb_device_event_t event, int data);
 static int secbulk_cdc_setup(struct usb_device_request *request,
 				struct urb *urb);
+static int secbulk_read(void);
 
 /* utility function for converting char* to wide string used by USB */
 static void str2wide(char *str, u16 * wide)
@@ -302,6 +306,82 @@ static void secbulk_init_endpoints(void)
 	}
 }
 
+static u_int16_t secbulk_checksum(const unsigned char *data, u_int32_t len)
+{
+	u_int16_t checksum = 0;
+	int i;
+
+	for (i = 0; i < len; i++)
+		checksum += data[i];
+
+	return checksum;
+}
+
+static int secbulk_read(void)
+{
+	struct usb_endpoint_instance *endpoint =
+		&endpoint_instance[2];		/* ep2 */
+
+	static u32	downloaded_count = 0;
+	static int	first_pkt = 1;
+	u8		*tmp_addr;
+	u16		checksum1;	/* read from usb packet */
+	u16		checksum2;	/* calculated from memory */
+
+	if (endpoint->rcv_urb && endpoint->rcv_urb->actual_length) {
+		unsigned int nb = 0;
+		char *src = (char *) endpoint->rcv_urb->buffer;
+
+		if (first_pkt) {
+			first_pkt = 0;
+			download_addr = *((u8 *)(src + 0)) +
+				(*((u8 *)(src + 1)) << 8) +
+				(*((u8 *)(src + 2)) << 16) +
+				(*((u8 *)(src + 3)) << 24);
+
+			count = *((u8 *)(src + 4)) +
+				(*((u8 *)(src + 5)) << 8) +
+				(*((u8 *)(src + 6)) << 16) +
+				(*((u8 *)(src + 7)) << 24);
+			src = endpoint->rcv_urb->buffer + 8;
+			endpoint->rcv_urb->actual_length -= 8;
+
+			info("load addr: %#x, total count: %d(%x)\n",
+					download_addr, count, count);
+		}
+
+
+		tmp_addr = (u8 *)download_addr + downloaded_count;
+		nb = endpoint->rcv_urb->actual_length;
+
+		memcpy(tmp_addr, src, nb);
+		downloaded_count += nb;
+		endpoint->rcv_urb->actual_length = 0;
+
+		if (downloaded_count == count - 8) {
+			tmp_addr = (u8 *)(download_addr + downloaded_count);
+			checksum1 = *(tmp_addr-2) + (*(tmp_addr-1) << 8);
+
+			/*
+			 * calculate checksum, last two bytes which
+			 * is checksum data is excluded
+			 */
+			checksum2 = secbulk_checksum((u8 *)download_addr,
+						downloaded_count - 2);
+			if (checksum1 == checksum2)
+				info("done, checksum: %04x\n", checksum1);
+			else
+				info("failed, checksum: %04x, %04x\n",
+						checksum1, checksum2);
+			first_pkt = 1;
+			download_addr = 0;
+			count = 0;
+			downloaded_count = 0;
+		}
+		return nb;
+	}
+	return 0;
+}
 /*************************************************************************/
 
 static void secbulk_event_handler(struct usb_device_instance *device,
@@ -312,6 +392,9 @@ static void secbulk_event_handler(struct usb_device_instance *device,
 		/* after usb reset, endpoints must be reconfigured */
 		debug("%s: event: %d\n", __func__, event);
 		secbulk_init_endpoints();
+		break;
+	case DEVICE_FUNCTION_PRIVATE:
+		secbulk_read();
 		break;
 	default:
 		debug("%s: event: %d\n", __func__, event);
