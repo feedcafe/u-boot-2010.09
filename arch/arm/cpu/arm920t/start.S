@@ -375,6 +375,17 @@ clbss_l:str	r2, [r0]		/* clear loop...                    */
 	cmp	r0, r1
 	ble	clbss_l
 
+#if	defined(CONFIG_MINI2440_LED)
+	@?0„2 LED1~4 on buzzer on
+	mov	r1, #GPIO_CTL_BASE
+	add	r1, r1, #oGPIO_B
+	ldr	r2,=0x155aa
+	str	r2, [r1, #oGPIO_CON]
+	mov	r2, #0xff
+	str	r2, [r1, #oGPIO_UP]
+	mov	r2, #0x0
+	str	r2, [r1, #oGPIO_DAT]
+#endif
 	ldr	pc, _start_armboot
 
 _start_armboot:	.word start_armboot

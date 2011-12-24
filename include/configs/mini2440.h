@@ -37,6 +37,7 @@
 #define CONFIG_S3C24X0	1	/* in a SAMSUNG S3C24x0-type SoC	*/
 #define CONFIG_S3C2440	1	/* specifically a SAMSUNG S3C2440 SoC	*/
 #define CONFIG_SMDK2440	1	/* on a SAMSUNG SMDK2440 Board  */
+#define	CONFIG_MINI2440_LED
 
 /* input clock of PLL */
 #define CONFIG_SYS_CLK_FREQ	12000000/* the SMDK2440 has 12MHz input clock */
@@ -213,6 +214,16 @@
 #define CONFIG_ENV_OFFSET	0x30000
 #define CONFIG_ENV_SIZE		0x10000	/* Total Size of Environment Sector */
 #define CONFIG_UBOOT_SIZE	0x30000
+
+
+# if defined(CONFIG_MINI2440_LED) 
+/* GPIO */
+#define GPIO_CTL_BASE	0x56000000
+#define oGPIO_B		0x10
+#define oGPIO_CON	0x0 /* R/W, Configures the pins of the port */
+#define oGPIO_DAT	0x4 /* R/W, Data register for port */
+#define oGPIO_UP	0x8 /* R/W, Pull-up disable register */
+#endif
 
 #define STACK_BASE	0x33f00000
 #define STACK_SIZE	0x8000

@@ -89,7 +89,11 @@ int board_init (void)
 
 	/* set up the I/O ports */
 	gpio->GPACON = 0x007FFFFF;
+#if defined(CONFIG_MINI2440_LED)
 	gpio->GPBCON = 0x00055555;	/* GPB5~GPB8 as LED1~LED4 */
+#else
+	gpio->GPBCON = 0x00044555;
+#endif
 	gpio->GPBUP = 0x000007FF;
 	gpio->GPCCON = 0xAAAAA6AA;	/* GPC5 used as USB device enable */
 	gpio->GPCUP = 0x0000FFDF;
@@ -113,13 +117,23 @@ int board_init (void)
 	icache_enable();
 	dcache_enable();
 
+#if defined(CONFIG_MINI2440_LED) 
+	gpio->GPBDAT = 0x060;	/* LED34 is on */
+#endif
 	return 0;
 }
 
 int dram_init (void)
 {
+	struct s3c24x0_gpio * const gpio = s3c24x0_get_base_gpio();
+
 	gd->bd->bi_dram[0].start = PHYS_SDRAM_1;
 	gd->bd->bi_dram[0].size = PHYS_SDRAM_1_SIZE;
+
+#if defined(CONFIG_MINI2440_LED) 
+	gpio->GPBDAT = 0x180;	/* LED1 and LED2 is on */
+	delay(9000);
+#endif
 
 	return 0;
 }
