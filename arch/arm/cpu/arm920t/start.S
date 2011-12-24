@@ -222,6 +222,15 @@ copyex:
 
 #ifndef CONFIG_SKIP_RELOCATE_UBOOT
 	adr	r0, _start		/* r0 <- current position of code   */
+#ifdef CONFIG_S3C2440_NAND_BOOT
+					/* are we running from NAND ?	    */
+#define	BWSCON 0x48000000
+	ldr	r1, =BWSCON		/* Z = CPU booted from NAND	    */
+	ldr	r1, [r1]
+	tst	r1, #6			/* BWSCON[2:1] = OM[1:0]	    */
+	teqeq	r0, #0			/* Z &= running at address 0	    */
+	beq	nand_load
+#endif /* CONFIG_S3C2440_NAND_BOOT */
 relocate:				/* relocate U-Boot to RAM	    */
 	ldr	r1, _TEXT_BASE		/* test if we run from flash or RAM */
 	cmp	r0, r1			/* don't reloc during debug         */
@@ -243,6 +252,87 @@ copy_loop:
 	ldr	pc, _done_relocate	/* jump to relocated code	    */
 _done_relocate:
 	.word	done_relocate
+
+#ifdef CONFIG_S3C2440_NAND_BOOT
+nand_load:
+#if !defined (CONFIG_SKIP_LOWLEVEL_INIT) && defined(CONFIG_LL_INIT_NAND_ONLY)
+	bl	cpu_init_crit
+#endif
+
+	/* mov	r10, lr */
+
+	@ reset NAND
+	mov	r1, #NAND_CTL_BASE
+	ldr	r2, =((7<<12)|(7<<8)|(7<<4)|(0<<0))
+	str	r2, [r1, #oNFCONF]
+	ldr	r2, [r1, #oNFCONF]
+	
+	ldr	r2, =( (1<<4)|(0<<1)|(1<<0) )	@ Active low CE Control 
+	str	r2, [r1, #oNFCONT]
+	ldr	r2, [r1, #oNFCONT]
+	
+	ldr	r2, =(0x6)	@ RnB Clear
+	str	r2, [r1, #oNFSTAT]
+	ldr	r2, [r1, #oNFSTAT]
+	
+	mov	r2, #0xff	@ RESET command
+	strb	r2, [r1, #oNFCMD]
+	
+	mov	r3, #0		@ wait
+1: 
+	add	r3, r3, #0x1
+	cmp	r3, #0xa
+	blt	1b
+2:
+	ldr	r2, [r1, #oNFSTAT]	@ wait ready
+	tst	r2, #0x4
+	beq	2b
+	
+	ldr	r2, [r1, #oNFCONT]
+	orr	r2, r2, #0x2	@ Flash Memory Chip Disable
+	str	r2, [r1, #oNFCONT]
+
+	/* stack setup */
+	ldr	r0, _TEXT_BASE	/* upper 128 KiB: relocated uboot	*/
+	sub	r0, r0, #CONFIG_SYS_MALLOC_LEN	/* malloc area		*/
+	sub	r0, r0, #CONFIG_SYS_GBL_DATA_SIZE /* bdinfo		*/
+#ifdef CONFIG_USE_IRQ
+	sub	r0, r0, #(CONFIG_STACKSIZE_IRQ+CONFIG_STACKSIZE_FIQ)
+#endif
+	sub	sp, r0, #12	/* leave 3 words for abort-stack	*/
+	
+	@ get read to call C functions (for nand_read())
+	@ldr	sp, DW_STACK_START	@ setup stack pointer
+	@mov	fp, #0	@ no previous frame, so fp=0
+
+	@ copy U-Boot to RAM
+	ldr	r0, =TEXT_BASE
+	mov	r1, #0x0
+	mov	r2, #CONFIG_UBOOT_SIZE
+	bl	nand_read_ll
+
+	tst	r0, #0x0
+	beq	ok_nand_read
+
+ok_nand_read:
+	@ verify
+	mov	r0, #0
+	ldr	r1, =TEXT_BASE
+	mov	r2, #0x400	@ 4 bytes * 1024 = 4K-bytes
+go_next:
+	ldr	r3, [r0], #4
+	ldr	r4, [r1], #4
+	teq	r3, r4
+	bne	notmatch
+	subs	r2, r2, #4
+	beq	done_nand_read
+	bne	go_next
+
+notmatch:
+1:	b	1b
+done_nand_read:
+#endif	/* CONFIG_S3C2440_NAND_BOOT */
+
 done_relocate:
 
 #if defined(CONFIG_USE_IRQ) && defined(CONFIG_S3C2440)

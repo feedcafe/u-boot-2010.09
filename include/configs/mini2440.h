@@ -103,6 +103,11 @@
 #define CONFIG_CMD_ELF
 #define	CONFIG_CMD_PING
 
+#define CONFIG_CMD_NAND
+#define CONFIG_SYS_MAX_NAND_DEVICE	1
+#define CONFIG_SYS_NAND_BASE		0x4E000000
+#define CONFIG_NAND_S3C2410
+
 #define	CONFIG_USB_DEVICE
 #define	CONFIG_S3C24X0_SECBULK
 #if 0
@@ -206,7 +211,22 @@
 
 #define	CONFIG_ENV_IS_IN_FLASH	1
 #define CONFIG_ENV_SIZE		0x10000	/* Total Size of Environment Sector */
+#define CONFIG_UBOOT_SIZE	0x30000
+
+
+/* NAND Flash Controller */
+#define NAND_CTL_BASE CONFIG_SYS_NAND_BASE
+
+/* Offset */
+#define oNFCONF	0x00
+#define oNFCONT	0x04
+#define oNFCMD	0x08
+#define oNFADDR	0x0c
+#define oNFDATA	0x10
+#define oNFSTAT	0x20
+#define oNFECC	0x2c
 
 #define	CONFIG_LL_INIT_NAND_ONLY
+#define CONFIG_S3C2440_NAND_BOOT
 
 #endif	/* __CONFIG_H */
