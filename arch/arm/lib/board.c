@@ -70,6 +70,14 @@ extern int  AT91F_DataflashInit(void);
 extern void dataflash_print_info(void);
 #endif
 
+#ifdef CONFIG_USB_LED
+extern int usb_led_init(void);
+#endif
+
+#ifdef CONFIG_S3C24X0_SECBULK
+extern int secbulk_init(void);
+#endif
+
 #ifndef CONFIG_IDENT_STRING
 #define CONFIG_IDENT_STRING ""
 #endif
