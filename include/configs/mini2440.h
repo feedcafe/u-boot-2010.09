@@ -209,10 +209,13 @@
 #define CONFIG_SYS_FLASH_ERASE_TOUT	(5*CONFIG_SYS_HZ) /* Timeout for Flash Erase */
 #define CONFIG_SYS_FLASH_WRITE_TOUT	(5*CONFIG_SYS_HZ) /* Timeout for Flash Write */
 
-#define	CONFIG_ENV_IS_IN_FLASH	1
+#define	CONFIG_ENV_IS_IN_NAND
+#define CONFIG_ENV_OFFSET	0x30000
 #define CONFIG_ENV_SIZE		0x10000	/* Total Size of Environment Sector */
 #define CONFIG_UBOOT_SIZE	0x30000
 
+#define STACK_BASE	0x33f00000
+#define STACK_SIZE	0x8000
 
 /* NAND Flash Controller */
 #define NAND_CTL_BASE CONFIG_SYS_NAND_BASE

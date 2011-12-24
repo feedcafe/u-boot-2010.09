@@ -174,6 +174,12 @@ copyex:
 	str	r1, [r0]
 # endif
 
+	/* FCLK:HCLK:PCLK = 1:2:4 */
+	/* default FCLK is 120 MHz ! */
+	ldr	r0, =CLKDIVN
+	mov	r1, #CLKDIVN_val
+	str	r1, [r0]
+
 	/* Clock asynchronous mode */
 	mrc	p15, 0, r1, c1, c0, 0
 	orr	r1, r1, #0xc0000000
@@ -202,12 +208,6 @@ copyex:
 
 	ldr	r1, =MPLLCON_val
 	str	r1, [r0, #-4]		/* MPLLCON */
-
-	/* FCLK:HCLK:PCLK = 1:2:4 */
-	/* default FCLK is 120 MHz ! */
-	ldr	r0, =CLKDIVN
-	mov	r1, #CLKDIVN_val
-	str	r1, [r0]
 #endif	/* CONFIG_S3C24X0 */
 
 	/*
@@ -352,6 +352,7 @@ irqvec_cpy_next:
 
 #endif	/* CONFIG_SKIP_RELOCATE_UBOOT */
 
+#ifndef CONFIG_S3C2440_NAND_BOOT
 	/* Set up the stack						    */
 stack_setup:
 	ldr	r0, _TEXT_BASE		/* upper 128 KiB: relocated uboot   */
@@ -362,6 +363,7 @@ stack_setup:
 #endif
 	sub	sp, r0, #12		/* leave 3 words for abort-stack    */
 	bic	sp, sp, #7		/* 8-byte alignment for ABI compliance */
+#endif	/* CONFIG_S3C2440_NAND_BOOT */
 
 clear_bss:
 	ldr	r0, _bss_start		/* find start of bss segment        */
@@ -377,6 +379,8 @@ clbss_l:str	r2, [r0]		/* clear loop...                    */
 
 _start_armboot:	.word start_armboot
 
+	.align 2
+DW_STACK_START:	.word STACK_BASE+STACK_SIZE-4
 
 /*
  *************************************************************************
