@@ -1,0 +1,67 @@
+This is a mini howto to learn about mini2440
+
+
+How to display env variables?
+
+	U-Boot 2010.09-00000-g05c8475 (Dec 25 2011 - 16:27:27)
+
+	DRAM:  64 MiB
+	Flash: 1 MiB
+	NAND:  64 MiB
+	In:    serial
+	Out:   serial
+	Err:   serial
+	Net:   dm9000
+	USB:   S3C2410 USB Deviced
+	ERROR: usbd_device_event_irq(), 599: ((null),4) NULL device or device->bus
+	Hit any key to stop autoboot:  9 Clearing SETUP_END
+	Clearing SETUP_END
+	0 
+	SMDK2440 # pri
+	bootargs=root=/dev/ram0 rdinit=linuxrc console=ttySAC0
+	bootdelay=9
+	baudrate=115200
+	ethaddr=00:19:87:07:27:15
+	bootfile="fdbai/uImage"
+	usbtty=cdc_acm
+	ethact=dm9000
+	filesize=25D70
+	fileaddr=33000000
+	netmask=255.255.255.0
+	ipaddr=192.168.2.15
+	serverip=192.168.2.98
+	bootcmd=nand read 33000000 80000 300000;bootm 33000000
+	stdin=serial
+	stdout=serial
+	stderr=serial
+
+	Environment size: 355/65532 bytes
+
+
+
+How to boot kernel from nand flash?
+	Flash uImage with U-Boot
+
+	a. Download uImage to RAM
+	   SMDK2440 # tftp 33000000 uImage
+
+	b. Flash uImage to NAND
+	   SMDK2440 # nand erase 80000 300000
+
+	   NAND erase: device 0 offset 0x80000, size 0x300000
+	   Erasing at 0x37c00001800000 --   0% complete.
+	   OK
+
+	   SMDK2440 # nand write 33000000 80000 300000
+
+	   NAND write: device 0 offset 0x80000, size 0x300000
+	   3145728 bytes written: OK
+
+	Boot kernel
+	   SMDK2440 # nand read 33000000 80000 300000;bootm 33000000
+
+	   NAND read: device 0 offset 0x80000, size 0x300000
+	   3145728 bytes read: OK
+	   Wrong Image Format for bootm command
+	   ERROR: can't get kernel image!
+
