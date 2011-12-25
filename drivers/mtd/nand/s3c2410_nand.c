@@ -48,6 +48,9 @@
 #define S3C2410_ADDR_NCLE	0x0C
 #endif	/* CONFIG_S3C2410 */
 
+#define	NF_BASE			0x4E000000
+ulong IO_ADDR_W = NF_BASE; 
+
 #ifdef CONFIG_NAND_SPL
 
 /* in the early stage of NAND flash booting, printf() is not available */
@@ -65,20 +68,20 @@ static void nand_read_buf(struct mtd_info *mtd, u_char *buf, int len)
 
 static void s3c2410_hwcontrol(struct mtd_info *mtd, int cmd, unsigned int ctrl)
 {
-	struct nand_chip *chip = mtd->priv;
+	/* struct nand_chip *chip = mtd->priv; */
 	struct s3c2410_nand *nand = s3c2410_get_base_nand();
 
 	debugX(1, "hwcontrol(): 0x%02x 0x%02x\n", cmd, ctrl);
 
 	if (ctrl & NAND_CTRL_CHANGE) {
-		ulong IO_ADDR_W = (ulong)nand;
+		IO_ADDR_W = (ulong)nand;
 
 		if (!(ctrl & NAND_CLE))
 			IO_ADDR_W |= S3C2410_ADDR_NCLE;
 		if (!(ctrl & NAND_ALE))
 			IO_ADDR_W |= S3C2410_ADDR_NALE;
 
-		chip->IO_ADDR_W = (void *)IO_ADDR_W;
+//		chip->IO_ADDR_W = (void *)IO_ADDR_W;
 
 #if defined(CONFIG_S3C2410)
 		if (ctrl & NAND_NCE)
@@ -99,7 +102,7 @@ static void s3c2410_hwcontrol(struct mtd_info *mtd, int cmd, unsigned int ctrl)
 	}
 
 	if (cmd != NAND_CMD_NONE)
-		writeb(cmd, chip->IO_ADDR_W);
+		writeb(cmd, (void *)IO_ADDR_W);
 }
 
 static int s3c2410_dev_ready(struct mtd_info *mtd)
