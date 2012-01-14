@@ -37,6 +37,7 @@
 #define debug(fmt,args...)	serial_printf (fmt ,##args)
 #define debugX(level,fmt,args...) if (DEBUG>=level) serial_printf(fmt,##args)
 #endif
+#undef debugX
 #define debugX(fmt,args...)	serial_printf (fmt ,##args)
 
 DECLARE_GLOBAL_DATA_PTR;

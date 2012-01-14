@@ -61,12 +61,16 @@
  * Hardware drivers
  */
 #define CONFIG_NET_MULTI
-#define	CONFIG_DRIVER_DM9000		/* we have a DM9000 on-board */
-#define	CONFIG_DM9000_BASE	0x20000300
-#define	CONFIG_DM9000_NO_SROM
-#define	DM9000_IO		CONFIG_DM9000_BASE
-#define	DM9000_DATA		(CONFIG_DM9000_BASE + 4)
 #define	CONFIG_ARP_TIMEOUT	5000	/* Milliseconds before trying ARP again */
+
+#define	CONFIG_DRIVER_DM9000		/* we have a DM9000 on-board */
+
+#ifdef CONFIG_DRIVER_DM9000
+# define CONFIG_DM9000_BASE	0x20000300
+# define CONFIG_DM9000_NO_SROM
+# define DM9000_IO		CONFIG_DM9000_BASE
+# define DM9000_DATA		(CONFIG_DM9000_BASE + 4)
+#endif
 
 /*
  * select serial console configuration

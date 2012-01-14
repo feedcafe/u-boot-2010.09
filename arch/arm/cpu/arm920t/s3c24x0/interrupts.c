@@ -35,6 +35,10 @@
 #include <asm/proc-armv/ptrace.h>
 #include <asm/io.h>
 
+#ifdef CONFIG_USB_DEVICE
+extern int s3c2410_udc_irq(void);
+#endif
+
 void do_irq (struct pt_regs *pt_regs)
 {
 	struct s3c24x0_interrupt *irq = s3c24x0_get_base_interrupt();
