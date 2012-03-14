@@ -135,7 +135,7 @@
 #define CONFIG_NETMASK          255.255.255.0
 #define CONFIG_IPADDR		192.168.2.15
 #define CONFIG_SERVERIP		192.168.2.98
-#define CONFIG_BOOTFILE		"fdbai/uImage"
+#define CONFIG_BOOTFILE		"uImage"
 #define CONFIG_BOOTCOMMAND	"tftp 31000000 u-boot.bin; go 31000000"
 
 #if defined(CONFIG_CMD_KGDB)
@@ -175,8 +175,8 @@
  */
 #define CONFIG_STACKSIZE	(128*1024)	/* regular stack */
 #ifdef CONFIG_USE_IRQ
-#define CONFIG_STACKSIZE_IRQ	(4*1024)	/* IRQ stack */
-#define CONFIG_STACKSIZE_FIQ	(4*1024)	/* FIQ stack */
+# define CONFIG_STACKSIZE_IRQ	(4*1024)	/* IRQ stack */
+# define CONFIG_STACKSIZE_FIQ	(4*1024)	/* FIQ stack */
 #endif
 
 /*-----------------------------------------------------------------------
@@ -201,14 +201,15 @@
 
 #define CONFIG_SYS_MAX_FLASH_BANKS	1	/* max number of memory banks */
 #ifdef CONFIG_AMD_LV800
-#define PHYS_FLASH_SIZE		0x00100000 /* 1MB */
-#define CONFIG_SYS_MAX_FLASH_SECT	(19)	/* max number of sectors on one chip */
-#define CONFIG_ENV_ADDR		(CONFIG_SYS_FLASH_BASE + 0x0F0000) /* addr of environment */
+# define PHYS_FLASH_SIZE		0x00100000 /* 1MB */
+# define CONFIG_SYS_MAX_FLASH_SECT	(19)	/* max number of sectors on one chip */
+# define CONFIG_ENV_ADDR		(CONFIG_SYS_FLASH_BASE + 0x0F0000) /* addr of environment */
 #endif
+
 #ifdef CONFIG_AMD_LV400
-#define PHYS_FLASH_SIZE		0x00080000 /* 512KB */
-#define CONFIG_SYS_MAX_FLASH_SECT	(11)	/* max number of sectors on one chip */
-#define CONFIG_ENV_ADDR		(CONFIG_SYS_FLASH_BASE + 0x070000) /* addr of environment */
+# define PHYS_FLASH_SIZE		0x00080000 /* 512KB */
+# define CONFIG_SYS_MAX_FLASH_SECT	(11)	/* max number of sectors on one chip */
+# define CONFIG_ENV_ADDR		(CONFIG_SYS_FLASH_BASE + 0x070000) /* addr of environment */
 #endif
 
 /* timeout values are in ticks */
@@ -216,18 +217,18 @@
 #define CONFIG_SYS_FLASH_WRITE_TOUT	(5*CONFIG_SYS_HZ) /* Timeout for Flash Write */
 
 #define	CONFIG_ENV_IS_IN_NAND
-#define CONFIG_ENV_OFFSET	0x30000
-#define CONFIG_ENV_SIZE		0x10000	/* Total Size of Environment Sector */
 #define CONFIG_UBOOT_SIZE	0x30000
+#define CONFIG_ENV_OFFSET	CONFIG_UBOOT_SIZE
+#define CONFIG_ENV_SIZE		0x10000	/* Total Size of Environment Sector */
 
 
-# if defined(CONFIG_MINI2440_LED) 
+#ifdef CONFIG_MINI2440_LED
 /* GPIO */
-#define GPIO_CTL_BASE	0x56000000
-#define oGPIO_B		0x10
-#define oGPIO_CON	0x0 /* R/W, Configures the pins of the port */
-#define oGPIO_DAT	0x4 /* R/W, Data register for port */
-#define oGPIO_UP	0x8 /* R/W, Pull-up disable register */
+# define GPIO_CTL_BASE	0x56000000
+# define oGPIO_B	0x10
+# define oGPIO_CON	0x0 /* R/W, Configures the pins of the port */
+# define oGPIO_DAT	0x4 /* R/W, Data register for port */
+# define oGPIO_UP	0x8 /* R/W, Pull-up disable register */
 #endif
 
 #define STACK_BASE	0x33f00000
