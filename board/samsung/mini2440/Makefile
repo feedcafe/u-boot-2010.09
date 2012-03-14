@@ -25,7 +25,8 @@ include $(TOPDIR)/config.mk
 
 LIB	= $(obj)lib$(BOARD).a
 
-COBJS	:= mini2440.o nand_read.o flash.o udc.o
+COBJS	:= mini2440.o nand_read.o flash.o
+COBJS-$(CONFIG_USB_DEVICE) += udc.o
 SOBJS	:= lowlevel_init.o
 
 SRCS	:= $(SOBJS:.o=.S) $(COBJS:.o=.c)
