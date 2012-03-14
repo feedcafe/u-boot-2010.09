@@ -35,7 +35,7 @@
 #include <asm/proc-armv/ptrace.h>
 #include <asm/io.h>
 
-#if defined(CONFIG_USB_DEVICE) || defined(CONFIG_USB_GADGET)
+#if defined(CONFIG_USB_DEVICE) || defined(CONFIG_USB_GADGET_S3C2410)
 extern int s3c2410_udc_irq(void);
 #endif
 
@@ -44,7 +44,7 @@ void do_irq (struct pt_regs *pt_regs)
 	struct s3c24x0_interrupt *irq = s3c24x0_get_base_interrupt();
 	u_int32_t intpnd = readl(&irq->INTPND);
 
-#if defined(CONFIG_USB_DEVICE) || defined(CONFIG_USB_GADGET)
+#if defined(CONFIG_USB_DEVICE) || defined(CONFIG_USB_GADGET_S3C2410)
 	if (intpnd & BIT_USBD) {
 		s3c2410_udc_irq();
 		irq->SRCPND = BIT_USBD;
