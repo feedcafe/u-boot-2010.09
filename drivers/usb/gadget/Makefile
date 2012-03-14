@@ -25,6 +25,11 @@ include $(TOPDIR)/config.mk
 
 LIB	:= $(obj)libusb_gadget.a
 
+# new USB gadget layer dependencies
+ifdef CONFIG_USB_GADGET
+COBJS-y += epautoconf.o config.o usbstring.o
+else
+# Devices not related to the new gadget layer depend on CONFIG_USB_DEVICE
 ifdef CONFIG_USB_DEVICE
 COBJS-y += core.o
 COBJS-y += ep0.o
@@ -34,6 +39,7 @@ COBJS-$(CONFIG_MPC885_FAMILY) += mpc8xx_udc.o
 COBJS-$(CONFIG_PXA27X) += pxa27x_udc.o
 COBJS-$(CONFIG_SPEARUDC) += spr_udc.o
 COBJS-$(CONFIG_S3C2440) += s3c2410_udc.o
+endif
 endif
 
 COBJS	:= $(COBJS-y)
