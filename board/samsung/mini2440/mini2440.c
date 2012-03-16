@@ -28,6 +28,7 @@
 #include <common.h>
 #include <netdev.h>
 #include <asm/arch/s3c24x0_cpu.h>
+#include <asm/arch/udc.h>
 
 DECLARE_GLOBAL_DATA_PTR;
 
@@ -55,6 +56,10 @@ DECLARE_GLOBAL_DATA_PTR;
 #define U_M_SDIV	0x2
 #endif
 
+#ifdef CONFIG_USB_GADGET_S3C2410
+extern int s3c2410_udc_probe(struct s3c2410_plat_udc_data *pdata);
+#endif
+
 static inline void delay (unsigned long loops)
 {
 	__asm__ volatile ("1:\n"
@@ -65,6 +70,30 @@ static inline void delay (unsigned long loops)
 /*
  * Miscellaneous platform dependent initialisations
  */
+
+static void mini2440_udc_pullup(int cmd)
+{
+	struct s3c24x0_gpio * const gpio = s3c24x0_get_base_gpio();
+
+	switch (cmd) {
+	case S3C2410_UDC_CMD_CONNECT:
+		gpio->GPCDAT |= (1 << 5);	/* GPC5 */
+		break;
+	case S3C2410_UDC_CMD_DISCONNECT:
+		gpio->GPCDAT &= ~(1 << 5);	/* GPC5 */
+		break;
+	default:
+		break;
+	}
+}
+
+static struct s3c2410_udc_mach_info mini2440_udc_cfg = {
+	.udc_command	= mini2440_udc_pullup,
+};
+
+static struct s3c2410_plat_udc_data mini2440_udc_pdata = {
+	.udc_info = &mini2440_udc_cfg,
+};
 
 int board_init (void)
 {
@@ -120,6 +149,11 @@ int board_init (void)
 #if defined(CONFIG_MINI2440_LED) 
 	gpio->GPBDAT = 0x060;	/* LED34 is on */
 #endif
+
+#ifdef CONFIG_USB_GADGET_S3C2410
+	s3c2410_udc_probe(&mini2440_udc_pdata);
+#endif
+
 	return 0;
 }
 
