@@ -8,6 +8,9 @@
 
 #define printk	printf
 
+#define WARN_ON(x) if (x) {printf("WARNING in %s line %d\n" \
+				  , __FILE__, __LINE__); }
+
 #define KERN_EMERG
 #define KERN_ALERT
 #define KERN_CRIT
@@ -17,11 +20,22 @@
 #define KERN_INFO
 #define KERN_DEBUG
 
+#define IRQ_HANDLED	1
+
+#define GFP_ATOMIC ((gfp_t) 0)
+#define GFP_KERNEL ((gfp_t) 0)
+
 #define kmalloc(size, flags)	malloc(size)
 #define kzalloc(size, flags)	calloc(size, 1)
 #define vmalloc(size)		malloc(size)
 #define kfree(ptr)		free(ptr)
 #define vfree(ptr)		free(ptr)
+
+#define spin_lock_init(...)
+#define spin_lock(...)
+#define spin_lock_irqsave(lock, flags) do { debug("%lu\n", flags); } while (0)
+#define spin_unlock(...)
+#define spin_unlock_irqrestore(lock, flags) do {flags = 0; } while (0)
 
 #define DECLARE_WAITQUEUE(...)	do { } while (0)
 #define add_wait_queue(...)	do { } while (0)
