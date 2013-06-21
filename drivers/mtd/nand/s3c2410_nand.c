@@ -17,7 +17,6 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston,
  * MA 02111-1307 USA
  */
-
 #include <common.h>
 
 #include <nand.h>
@@ -71,7 +70,7 @@ static void s3c2410_hwcontrol(struct mtd_info *mtd, int cmd, unsigned int ctrl)
 	/* struct nand_chip *chip = mtd->priv; */
 	struct s3c2410_nand *nand = s3c2410_get_base_nand();
 
-	debugX(1, "hwcontrol(): 0x%02x 0x%02x\n", cmd, ctrl);
+	debug(1, "hwcontrol(): 0x%02x 0x%02x\n", cmd, ctrl);
 
 	if (ctrl & NAND_CTRL_CHANGE) {
 		IO_ADDR_W = (ulong)nand;
@@ -108,7 +107,7 @@ static void s3c2410_hwcontrol(struct mtd_info *mtd, int cmd, unsigned int ctrl)
 static int s3c2410_dev_ready(struct mtd_info *mtd)
 {
 	struct s3c2410_nand *nand = s3c2410_get_base_nand();
-	debugX(1, "dev_ready\n");
+	debug(1, "dev_ready\n");
 	return readl(&nand->NFSTAT) & 0x01;
 }
 
@@ -116,7 +115,7 @@ static int s3c2410_dev_ready(struct mtd_info *mtd)
 void s3c2410_nand_enable_hwecc(struct mtd_info *mtd, int mode)
 {
 	struct s3c2410_nand *nand = s3c2410_get_base_nand();
-	debugX(1, "s3c2410_nand_enable_hwecc(%p, %d)\n", mtd, mode);
+	debug(1, "s3c2410_nand_enable_hwecc(%p, %d)\n", mtd, mode);
 	writel(readl(&nand->NFCONF) | S3C2410_NFCONF_INITECC, &nand->NFCONF);
 }
 
@@ -127,7 +126,7 @@ static int s3c2410_nand_calculate_ecc(struct mtd_info *mtd, const u_char *dat,
 	ecc_code[0] = readb(&nand->NFECC);
 	ecc_code[1] = readb(&nand->NFECC + 1);
 	ecc_code[2] = readb(&nand->NFECC + 2);
-	debugX(1, "s3c2410_nand_calculate_hwecc(%p,): 0x%02x 0x%02x 0x%02x\n",
+	debug(1, "s3c2410_nand_calculate_hwecc(%p,): 0x%02x 0x%02x 0x%02x\n",
 	       mtd , ecc_code[0], ecc_code[1], ecc_code[2]);
 
 	return 0;
@@ -153,7 +152,7 @@ int board_nand_init(struct nand_chip *nand)
 	struct s3c24x0_clock_power *clk_power = s3c24x0_get_base_clock_power();
 	struct s3c2410_nand *nand_reg = s3c2410_get_base_nand();
 
-	debugX(1, "board_nand_init()\n");
+	debug(1, "board_nand_init()\n");
 
 	writel(readl(&clk_power->CLKCON) | (1 << 4), &clk_power->CLKCON);
 
@@ -217,7 +216,7 @@ int board_nand_init(struct nand_chip *nand)
 	nand->options = 0;
 #endif
 
-	debugX(1, "end of nand_init\n");
+	debug(1, "end of nand_init\n");
 
 	return 0;
 }
