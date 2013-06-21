@@ -212,7 +212,7 @@
 #define CONFIG_SYS_FLASH_WRITE_TOUT	(5*CONFIG_SYS_HZ) /* Timeout for Flash Write */
 
 #define	CONFIG_ENV_IS_IN_NAND
-#define CONFIG_UBOOT_SIZE	0x30000
+#define CONFIG_UBOOT_SIZE	0x30000			/* siez = n * nand page size */
 #define CONFIG_ENV_OFFSET	CONFIG_UBOOT_SIZE
 #define CONFIG_ENV_SIZE		0x10000	/* Total Size of Environment Sector */
 
