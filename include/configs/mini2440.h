@@ -197,9 +197,6 @@
  * FLASH and environment organization
  */
 
-#if 0
-#define CONFIG_AMD_LV400	1	/* uncomment this if you have a LV400 flash */
-#endif
 #define CONFIG_AMD_LV800	1	/* uncomment this if you have a LV800 flash */
 
 #define CONFIG_SYS_MAX_FLASH_BANKS	1	/* max number of memory banks */
@@ -209,11 +206,6 @@
 # define CONFIG_ENV_ADDR		(CONFIG_SYS_FLASH_BASE + 0x0F0000) /* addr of environment */
 #endif
 
-#ifdef CONFIG_AMD_LV400
-# define PHYS_FLASH_SIZE		0x00080000 /* 512KB */
-# define CONFIG_SYS_MAX_FLASH_SECT	(11)	/* max number of sectors on one chip */
-# define CONFIG_ENV_ADDR		(CONFIG_SYS_FLASH_BASE + 0x070000) /* addr of environment */
-#endif
 
 /* timeout values are in ticks */
 #define CONFIG_SYS_FLASH_ERASE_TOUT	(5*CONFIG_SYS_HZ) /* Timeout for Flash Erase */
