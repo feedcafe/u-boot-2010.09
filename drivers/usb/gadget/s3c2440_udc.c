@@ -499,7 +499,8 @@ int s3c2410_udc_probe(struct s3c2410_plat_udc_data *pdata)
 
 	the_controller = dev;
 
-	usbinfo("%s\n", __func__);
+	/* don't put printf here */
+	/* usbinfo("%s\n", __func__); */
 
 	return 0;
 }
