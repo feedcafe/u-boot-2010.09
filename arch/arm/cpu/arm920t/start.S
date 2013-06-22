@@ -262,7 +262,7 @@ nand_load:
 	/* mov	r10, lr */
 
 	@ reset NAND
-	mov	r1, #NAND_CTL_BASE
+	mov	r1, #CONFIG_SYS_NAND_BASE
 	ldr	r2, =((7<<12)|(7<<8)|(7<<4)|(0<<0))
 	str	r2, [r1, #oNFCONF]
 	ldr	r2, [r1, #oNFCONF]

@@ -230,7 +230,6 @@
 #define STACK_SIZE	0x8000
 
 /* NAND Flash Controller */
-#define NAND_CTL_BASE CONFIG_SYS_NAND_BASE
 
 /* Offset */
 #define oNFCONF	0x00
