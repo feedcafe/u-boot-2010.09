@@ -71,16 +71,18 @@ static inline void delay (unsigned long loops)
  * Miscellaneous platform dependent initialisations
  */
 
-static void mini2440_udc_pullup(int cmd)
+static void mini2440_udc_pullup(enum s3c2410_udc_cmd_e cmd)
 {
 	struct s3c24x0_gpio * const gpio = s3c24x0_get_base_gpio();
 
 	switch (cmd) {
-	case S3C2410_UDC_CMD_CONNECT:
+	case S3C2410_UDC_P_ENABLE:
 		gpio->GPCDAT |= (1 << 5);	/* GPC5 */
 		break;
-	case S3C2410_UDC_CMD_DISCONNECT:
+	case S3C2410_UDC_P_DISABLE:
 		gpio->GPCDAT &= ~(1 << 5);	/* GPC5 */
+		break;
+	case S3C2410_UDC_P_RESET:
 		break;
 	default:
 		break;
