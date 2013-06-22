@@ -136,8 +136,8 @@
 #define CONFIG_BOOTARGS		"root=/dev/ram0 rdinit=linuxrc console=ttySAC0"
 #define CONFIG_ETHADDR		00:19:87:07:27:15
 #define CONFIG_NETMASK          255.255.255.0
-#define CONFIG_IPADDR		192.168.2.15
-#define CONFIG_SERVERIP		192.168.2.98
+#define CONFIG_IPADDR		192.168.1.15
+#define CONFIG_SERVERIP		192.168.1.98
 #define CONFIG_BOOTFILE		"uImage"
 #define CONFIG_BOOTCOMMAND	"tftp 31000000 u-boot.bin; go 31000000"
 
