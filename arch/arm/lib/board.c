@@ -70,7 +70,7 @@ extern int  AT91F_DataflashInit(void);
 extern void dataflash_print_info(void);
 #endif
 
-#ifdef CONFIG_USB_LED
+#if defined(CONFIG_USB_LED) || defined(CONFIG_USB_G_LED)
 extern int usb_led_init(void);
 #endif
 
@@ -451,7 +451,7 @@ extern void davinci_eth_set_mac_addr (const u_int8_t *addr);
 #endif
 #endif
 
-#ifdef CONFIG_USB_LED
+#if defined(CONFIG_USB_LED) || defined(CONFIG_USB_G_LED)
 	usb_led_init();
 #endif
 

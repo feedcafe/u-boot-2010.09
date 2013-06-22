@@ -117,6 +117,8 @@
 #define CONFIG_USB_GADGET
 #define CONFIG_USB_GADGET_S3C2410
 
+#define CONFIG_USB_G_LED
+
 /* #define CONFIG_USB_ETHER	*/
 /* #define CONFIG_USB_ETH_RNDIS */
 

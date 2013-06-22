@@ -31,6 +31,7 @@ COBJS-y += epautoconf.o config.o usbstring.o
 COBJS-$(CONFIG_USB_GADGET_S3C2410) += s3c2440_udc.o
 COBJS-$(CONFIG_USB_ETHER) += ether.o
 COBJS-$(CONFIG_USB_ETH_RNDIS) += rndis.o
+COBJS-$(CONFIG_USB_G_LED) += g_usbled.o
 else
 # Devices not related to the new gadget layer depend on CONFIG_USB_DEVICE
 ifdef CONFIG_USB_DEVICE
