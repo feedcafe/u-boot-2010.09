@@ -1,7 +1,6 @@
 This is a mini howto to learn about mini2440
 
-
-How to display env variables?
+1. How to display env variables?
 
 	U-Boot 2010.09-00000-g05c8475 (Dec 25 2011 - 16:27:27)
 
@@ -39,7 +38,7 @@ How to display env variables?
 
 
 
-How to boot kernel from nand flash?
+2. How to boot kernel from nand flash?
 	Flash uImage with U-Boot
 
 	a. Download uImage to RAM
@@ -65,3 +64,34 @@ How to boot kernel from nand flash?
 	   Wrong Image Format for bootm command
 	   ERROR: can't get kernel image!
 
+3. mtd partitions
+	SMDK2440 # mtdparts
+
+	device nand0 <nand>, # parts = 4
+	 #: name		size		offset		mask_flags
+	 0: U-Boot              0x00040000	0x00000000	0
+	 1: u-boot-env          0x00020000	0x00040000	0
+	 2: boot                0x00300000	0x00060000	0
+	 3: test                0x0fca0000	0x00360000	0
+
+	active partition: nand0,0 - (U-Boot) 0x00040000 @ 0x00000000
+
+	defaults:
+	mtdids  : nand0=nand
+	mtdparts: mtdparts=nand:256k(U-Boot),128k@0x40000(u-boot-env),3m@0x60000(boot),-(test)
+
+4. using fastboot
+	a. erase nand partition
+	$ fastboot erase U-Boot
+              erasing 'U-Boot'... OKAY [  0.014s]
+	finished. total time: 0.014s
+
+	erasing 'U-Boot'
+	Erasing at 0x2000000000004 --   0% complete.
+	partition 'U-Boot' erased
+	from 0 size: 40000
+
+	after erasing U-Boot partition, reset will fail
+
+	SMDK2440 # reset
+	resetting ...
