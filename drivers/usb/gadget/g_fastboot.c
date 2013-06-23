@@ -68,11 +68,11 @@
 
 #ifdef DEBUG
 #undef debug
-#define debug(fmt,args...)	serial_printf (fmt ,##args)
+#define debug(fmt, args...)	serial_printf(fmt, ##args)
 #endif
 
 #undef debugX
-#define debugX(fmt,args...)	serial_printf (fmt ,##args)
+#define debugX(fmt, args...)	serial_printf(fmt, ##args)
 
 #define STRING_MANUFACTURER	1
 #define STRING_PRODUCT		2
@@ -110,9 +110,9 @@ struct fastboot_dev {
 	struct usb_request	*tx_req;
 };
 
-static char		manufacturer[64] = DRIVER_MANUFACTURER;
-static char		product_desc[30] = DRIVER_DESC;
-static char		serial[20] = "20120115";
+static char	manufacturer[64] = DRIVER_MANUFACTURER;
+static char	product_desc[30] = DRIVER_DESC;
+static char	serial[20] = "20120115";
 
 static unsigned rx_addr;
 static unsigned rx_length;
@@ -217,7 +217,6 @@ static void rx_cmd(struct fastboot_dev *dev)
 
 	debug("%s\n", __func__);
 
-	//req->buf = cmdbuf;
 	req->length = USB_DATA_SIZE;
 	req->complete = usb_rx_cmd_complete;
 	err = usb_ep_queue(dev->out_ep, req, GFP_ATOMIC);
@@ -278,39 +277,12 @@ static void usb_rx_data_complete(struct usb_ep *ep, struct usb_request *req)
 	}
 }
 
-static unsigned hex2unsigned(char *x)
-{
-	unsigned n = 0;
-
-	while(*x) {
-		switch(*x) {
-		case '0': case '1': case '2': case '3': case '4':
-		case '5': case '6': case '7': case '8': case '9':
-			n = (n << 4) | (*x - '0');
-			break;
-		case 'a': case 'b': case 'c':
-		case 'd': case 'e': case 'f':
-			n = (n << 4) | (*x - 'a' + 10);
-			break;
-		case 'A': case 'B': case 'C':
-		case 'D': case 'E': case 'F':
-			n = (n << 4) | (*x - 'A' + 10);
-			break;
-		default:
-			return n;
-		}
-		x++;
-	}
-
-	return n;
-}
-
 static void num_to_hex8(unsigned n, char *out)
 {
 	static char tohex[16] = "0123456789abcdef";
 	int i;
 
-	for(i = 7; i >= 0; i--) {
+	for (i = 7; i >= 0; i--) {
 		out[i] = tohex[n & 15];
 		n >>= 4;
 	}
@@ -357,8 +329,8 @@ static int fastboot_nand_write(const char *name)
 		return -ENODEV;
 	}
 
-	return nand_write_skip_bad(&nand_info[0], part->offset, &part->size,
-					(u8 *)kernel_addr);
+	return nand_write_skip_bad(&nand_info[0], part->offset,
+					&part->size, (u8 *)kernel_addr);
 }
 
 static int fastboot_image_is_boot(void)
@@ -372,10 +344,10 @@ static int fastboot_image_is_boot(void)
 	return 0;
 }
 
-static int fastboot_boot_linux(void)
+static int fastboot_boot_linux(struct usb_gadget *gadget)
 {
 	if (fastboot_image_is_boot()) {
-		printf ("Starting at 0x%08x ...\n", kernel_addr + 0x800);
+		printf("Starting at 0x%08x ...\n", kernel_addr + 0x800);
 		do_go_exec((void *) kernel_addr + 0x800);
 	} else {
 		char addr[16];
@@ -383,6 +355,8 @@ static int fastboot_boot_linux(void)
 
 		printf("booting linux at 0x%s ...\n", addr);
 		setenv("loadaddr", addr);
+
+		usb_gadget_disconnect(gadget);
 
 		do_bootm(NULL, 0, 0, NULL);
 	}
@@ -416,6 +390,7 @@ static void usb_rx_cmd_complete(struct usb_ep *ep, struct usb_request *req)
 
 	if (memcmp(cmdbuf, "getvar:", 7) == 0) {
 		char resp[64];
+
 		strcpy(resp, "OKAY");
 
 		if (!strcmp(cmdbuf + 7, "version"))
@@ -433,8 +408,9 @@ static void usb_rx_cmd_complete(struct usb_ep *ep, struct usb_request *req)
 
 	if (memcmp(cmdbuf, "download:", 9) == 0) {
 		char status[16];
+
 		rx_addr = kernel_addr;
-		rx_length = hex2unsigned(cmdbuf + 9);
+		rx_length = (unsigned)simple_strtoul(cmdbuf + 9, NULL, 16);
 		if (rx_length > (64 * 1024 * 1024)) {
 			tx_status(dev, "FAILdata too large");
 			rx_cmd(dev);
@@ -465,7 +441,6 @@ static void usb_rx_cmd_complete(struct usb_ep *ep, struct usb_request *req)
 	if (memcmp(cmdbuf, "flash:", 6) == 0) {
 		struct mtd_device	*mtddev;
 		struct part_info	*part;
-		int extra = 0;
 		u8 pnum;
 
 		if (kernel_size == 0) {
@@ -514,13 +489,12 @@ static void usb_rx_cmd_complete(struct usb_ep *ep, struct usb_request *req)
 		debug("boot not working yet\n");
 		tx_status(dev, "OKAY");
 		udelay(10000);
-		usb_gadget_disconnect(dev->gadget);
-		fastboot_boot_linux();
+		fastboot_boot_linux(dev->gadget);
 		return;
 	}
 
 	/*
-	 * TODO: need to add flash, flashall, update command
+	 * TODO: need to add flashall, update command
 	 */
 
 	tx_status(dev, "FAILinvalid command");
@@ -673,7 +647,7 @@ static int fastboot_set_cfg(struct fastboot_dev *dev)
 
 static int fastboot_set_config(struct fastboot_dev *dev, unsigned number)
 {
-	int			result = 0;
+	int	result = 0;
 
 	fastboot_reset_config(dev);
 
@@ -736,7 +710,7 @@ fastboot_setup(struct usb_gadget *gadget, const struct usb_ctrlrequest *ctrl)
 
 		case USB_DT_STRING:
 			value = usb_gadget_get_string(&stringtab,
-					wValue &0xff, req->buf);
+					wValue & 0xff, req->buf);
 			if (value >= 0)
 				value = min(wLength, (u16)value);
 			break;
@@ -762,7 +736,7 @@ fastboot_setup(struct usb_gadget *gadget, const struct usb_ctrlrequest *ctrl)
 				wValue, wIndex, wLength);
 	}
 
-	if (value >=0) {
+	if (value >= 0) {
 		debug("respond with data transfer before status phase\n");
 		req->length = value;
 		req->zero = value < wLength
