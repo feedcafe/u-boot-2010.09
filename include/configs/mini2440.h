@@ -131,7 +131,7 @@
 					"256k(x-loader),"	\
 					"128k(u-boot-env),"	\
 					"3m(recovery),"		\
-					"3m(boot),"		\
+					"5m(boot),"		\
 					"30m(system),"		\
 					"10m(cache),"		\
 					"-(userdata)"
@@ -171,7 +171,7 @@
 		"mtdparts=" MTDPARTS_DEFAULT "\0"
 
 #define CONFIG_BOOTDELAY	9
-#define CONFIG_BOOTARGS		"root=/dev/ram0 rdinit=linuxrc" \
+#define CONFIG_BOOTARGS		"root=/dev/ram0 rdinit=linuxrc " \
 				"console=ttySAC0"
 
 #define CONFIG_ETHADDR		00:19:87:07:27:15
