@@ -31,6 +31,8 @@
 #include <linux/usb/gadget.h>
 #include <linux/usb/compat.h>
 
+#define DEBUG
+
 #ifdef DEBUG
 #undef debug
 #define debug(fmt,args...)	serial_printf (fmt ,##args)
@@ -70,7 +72,7 @@ struct secbulk_dev {
 
 static char		manufacturer[64] = DRIVER_MANUFACTURER;
 static char		product_desc[30] = DRIVER_DESC;
-static char		serial[15] = "1";
+static char		serial[20] = "Date: Jan 11, 2012";
 
 /* Static strings, in UTF-8 (for simplicity we use only ASCII characters */
 static struct usb_string strings[] = {
@@ -171,6 +173,11 @@ static void secbulk_setup_complete(struct usb_ep *ep, struct usb_request *req)
 				req->status, req->actual, req->length);
 }
 
+static void secbulk_rx_complete(struct usb_ep *ep, struct usb_request *req)
+{
+
+}
+
 static void secbulk_reset_config(struct secbulk_dev *dev)
 {
 	if (dev->config == 0)
@@ -179,8 +186,29 @@ static void secbulk_reset_config(struct secbulk_dev *dev)
 
 	/* disable endpoints, forcing completion of pending i/o */
 	usb_ep_disable(dev->out_ep);
+	if (dev->rx_req) {
+		usb_ep_free_request(dev->out_ep, dev->rx_req);
+		dev->rx_req = NULL;
+	}
 
 	dev->config = 0;
+}
+
+static struct usb_request *
+secbulk_alloc_req(struct usb_ep *ep, unsigned len, gfp_t gfp_flags)
+{
+	struct usb_request	*req;
+	req = usb_ep_alloc_request(ep, gfp_flags);
+	if (req != NULL) {
+		req->length = len;
+		req->buf = kzalloc(len, gfp_flags);
+		if (req->buf == NULL) {
+			usb_ep_free_request(ep, req);
+			return NULL;
+		}
+	}
+
+	return req;
 }
 
 static int secbulk_set_cfg(struct secbulk_dev *dev)
@@ -195,7 +223,7 @@ static int secbulk_set_cfg(struct secbulk_dev *dev)
 	dev->out_ep->driver_data = dev;
 
 	/* allocate buffer for bulk out endpoint */
-	dev->rx_req = usb_ep_alloc_request(dev->out_ep, 0);
+	dev->rx_req = secbulk_alloc_req(dev->out_ep, USB_BUFSIZ, GFP_KERNEL);
 	if (!dev->rx_req)
 		return -ENOMEM;
 
