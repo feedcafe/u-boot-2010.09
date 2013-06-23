@@ -63,7 +63,7 @@
 #define CONFIG_NET_MULTI
 #define	CONFIG_ARP_TIMEOUT	5000	/* Milliseconds before trying ARP again */
 
-#define	CONFIG_DRIVER_DM9000		/* we have a DM9000 on-board */
+//#define	CONFIG_DRIVER_DM9000		/* we have a DM9000 on-board */
 
 #ifdef CONFIG_DRIVER_DM9000
 # define CONFIG_DM9000_BASE	0x20000300
@@ -117,9 +117,9 @@
 #define CONFIG_USB_GADGET
 #define CONFIG_USB_GADGET_S3C2410
 
-#define CONFIG_USB_G_LED
+//#define CONFIG_USB_G_LED
 
-/* #define CONFIG_USB_ETHER	*/
+#define CONFIG_USB_ETHER
 /* #define CONFIG_USB_ETH_RNDIS */
 
 #ifdef CONFIG_USB_ETHER

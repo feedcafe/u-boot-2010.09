@@ -60,6 +60,10 @@ DECLARE_GLOBAL_DATA_PTR;
 extern int s3c2410_udc_probe(struct s3c2410_plat_udc_data *pdata);
 #endif
 
+#ifdef CONFIG_USB_ETHER
+extern int usb_eth_initialize(bd_t *bi);
+#endif
+
 static inline void delay (unsigned long loops)
 {
 	__asm__ volatile ("1:\n"
@@ -181,6 +185,10 @@ int board_eth_init(bd_t *bis)
 
 #ifdef CONFIG_DRIVER_DM9000
 	rc = dm9000_initialize(bis);
+#endif
+
+#ifdef CONFIG_USB_ETHER
+	rc = usb_eth_initialize(bis);
 #endif
 	return rc;
 }
