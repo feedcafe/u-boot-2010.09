@@ -257,7 +257,7 @@ static void usb_rx_data_complete(struct usb_ep *ep, struct usb_request *req)
 {
 	struct fastboot_dev *dev = ep->driver_data;
 
-	debug("%s\n", __func__);
+	debug("%s, addr= %x len=%x\n", __func__, rx_addr, rx_length);
 
 	if (req->status != 0)
 		return;
@@ -426,7 +426,7 @@ static void usb_rx_cmd_complete(struct usb_ep *ep, struct usb_request *req)
 		}
 		kernel_size = rx_length;
 
-		debug("recv data: addr=%x size=%x\n", rx_addr, rx_length);
+		debugX("recv data: addr=%x size=%x\n", rx_addr, rx_length);
 		strncpy(status, "DATA", 4);
 		num_to_hex8(rx_length, status + 4);
 		tx_status(dev, status);
@@ -435,7 +435,6 @@ static void usb_rx_cmd_complete(struct usb_ep *ep, struct usb_request *req)
 	}
 
 	if (memcmp(cmdbuf, "erase:", 6) == 0) {
-
 		if (fastboot_nand_erase(cmdbuf + 6)) {
 			tx_status(dev, "FAILfailed to erase partition");
 			rx_cmd(dev);
@@ -446,9 +445,51 @@ static void usb_rx_cmd_complete(struct usb_ep *ep, struct usb_request *req)
 		return;
 	}
 
-	if (memcmp(cmdbuf, "boot:", 4) == 0) {
-		debug("boot\n");
+	if (memcmp(cmdbuf, "flash:", 6) == 0) {
+		struct mtd_device	*mtddev;
+		struct part_info	*part;
+		int extra = 0;
+		u8 pnum;
 
+		if (kernel_size == 0) {
+			tx_status(dev, "FAILno image downloaded");
+			rx_cmd(dev);
+			return;
+		}
+
+		if (find_dev_and_part(cmdbuf + 6, &mtddev, &pnum, &part)) {
+			tx_status(dev, "FAILpartition does not exist");
+			rx_cmd(dev);
+			return;
+		}
+
+#if 0
+		if (!strcmp(part->name, "boot") || !strcmp(part->name, "recovery")) {
+			if (memcmp((void *)kernel_addr, BOOT_MAGIC, BOOT_MAGIC_SIZE)) {
+				tx_status(dev, "FAILimage is not a boot image");
+				rx_cmd(dev);
+				return;
+			}
+		}
+#endif
+
+
+		if (!strcmp(part->name, "system") || !strcmp(part->name, "userdata"))
+			extra = 64;
+		else
+			kernel_size = (kernel_size + 2047) & (~2047);
+
+		tx_status(dev, "OKAY");
+		rx_cmd(dev);
+		return;
+	}
+
+	if (memcmp(cmdbuf, "boot", 4) == 0) {
+		debug("boot not working yet\n");
+		debugX("Starting at 0x%08x ...\n", kernel_addr);
+		tx_status(dev, "OKAY");
+		rx_cmd(dev);
+		do_go_exec((void *) kernel_addr + 0x800);
 	}
 
 	/*
