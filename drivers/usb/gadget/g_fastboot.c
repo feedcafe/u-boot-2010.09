@@ -1,7 +1,37 @@
 /*
+ * Copyright (C) 2008 The Android Open Source Project
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *  * Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in
+ *    the documentation and/or other materials provided with the
+ *    distribution.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+ * FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+ * COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+ * BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS
+ * OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED
+ * AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+ * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
+ * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+ * SUCH DAMAGE.
+ *
  * g_fastboot.c -- Android Fastboot Gadget Driver
  *
  * Based on
+ * bootable_bootloader_legacy/usbloader/usbloader.c
+ *
+ * and
+ *
  * drivers/usb/gadget/g_fastboot.c
  *
  * This program is free software; you can redistribute it and/or modify
@@ -29,8 +59,12 @@
 #include <linux/usb/ch9.h>
 #include <linux/usb/gadget.h>
 #include <linux/usb/compat.h>
+#include <linux/mtd/mtd.h>
+#include <jffs2/load_kernel.h>
 
-#define DEBUG
+#include <nand.h>
+
+//#define DEBUG
 
 #ifdef DEBUG
 #undef debug
@@ -80,6 +114,9 @@ static char		serial[20] = "20120115";
 
 static unsigned rx_addr;
 static unsigned rx_length;
+
+unsigned kernel_addr = 0x33000000;
+unsigned kernel_size = 0;
 
 static u8 ctrl_req[USB_BUFSIZ];
 
@@ -238,6 +275,105 @@ static void usb_rx_data_complete(struct usb_ep *ep, struct usb_request *req)
 		rx_cmd(dev);
 	}
 }
+
+static unsigned hex2unsigned(char *x)
+{
+	unsigned n = 0;
+
+	while(*x) {
+		switch(*x) {
+		case '0': case '1': case '2': case '3': case '4':
+		case '5': case '6': case '7': case '8': case '9':
+			n = (n << 4) | (*x - '0');
+			break;
+		case 'a': case 'b': case 'c':
+		case 'd': case 'e': case 'f':
+			n = (n << 4) | (*x - 'a' + 10);
+			break;
+		case 'A': case 'B': case 'C':
+		case 'D': case 'E': case 'F':
+			n = (n << 4) | (*x - 'A' + 10);
+			break;
+		default:
+			return n;
+		}
+		x++;
+	}
+
+	return n;
+}
+
+static void num_to_hex8(unsigned n, char *out)
+{
+	static char tohex[16] = "0123456789abcdef";
+	int i;
+
+	for(i = 7; i >= 0; i--) {
+		out[i] = tohex[n & 15];
+		n >>= 4;
+	}
+	out[8] = 0;
+}
+
+#if 0
+static int
+fastboot_flash_find_ptn(const char *name, struct part_info **part)
+{
+	struct mtd_device	*dev;
+	struct part_info	*part;
+
+	nand_info_t		*nand;
+
+
+	return 0;
+
+
+	ret = nand_erase_opts(nand, &opts);
+	printf("%s\n", ret ? "ERROR" : "OK");
+
+	return ret == 0 ? 0 : 1;
+}
+#endif
+
+static int fastboot_nand_erase(const char *name)
+{
+	struct mtd_device	*dev;
+	struct part_info	*part;
+	struct mtd_info		*mtd;
+	char			mtd_dev[16];
+	u8			pnum;
+
+	nand_erase_options_t opts;
+
+	if (find_dev_and_part(name, &dev, &pnum, &part)) {
+		printf("Partition %s not found!\n", name);
+		return -ENODEV;
+	}
+	printf("erasing '%s'\n", part->name);
+#if 0
+	sprintf(mtd_dev, "%s%d", MTD_DEV_TYPE(dev->id->type), dev->id->num);
+
+	mtd = get_mtd_device_nm(mtd_dev);
+	if (IS_ERR(mtd)) {
+		printf("Partition %s not found on device %s!\n", part->name, mtd_dev);
+	}
+#endif
+
+	memset(&opts, 0, sizeof(opts));
+	opts.length = part->size;
+	opts.offset = part->offset;
+	opts.quiet = 0;
+	opts.jffs2 = 0;
+	opts.scrub = 0;
+
+	if (nand_erase_opts(&nand_info[0], &opts))
+		return -EINVAL;
+	printf("partition '%s' erased\n", part->name);
+	printf("from %x size: %x\n", part->offset, part->size);
+
+	return 0;
+}
+
 static void usb_rx_cmd_complete(struct usb_ep *ep, struct usb_request *req)
 {
 	struct fastboot_dev	*dev = ep->driver_data;
@@ -279,8 +415,44 @@ static void usb_rx_cmd_complete(struct usb_ep *ep, struct usb_request *req)
 		return;
 	}
 
+	if (memcmp(cmdbuf, "download:", 9) == 0) {
+		char status[16];
+		rx_addr = kernel_addr;
+		rx_length = hex2unsigned(cmdbuf + 9);
+		if (rx_length > (64 * 1024 * 1024)) {
+			tx_status(dev, "FAILdata too large");
+			rx_cmd(dev);
+			return;
+		}
+		kernel_size = rx_length;
+
+		debug("recv data: addr=%x size=%x\n", rx_addr, rx_length);
+		strncpy(status, "DATA", 4);
+		num_to_hex8(rx_length, status + 4);
+		tx_status(dev, status);
+		rx_data(dev);
+		return;
+	}
+
+	if (memcmp(cmdbuf, "erase:", 6) == 0) {
+
+		if (fastboot_nand_erase(cmdbuf + 6)) {
+			tx_status(dev, "FAILfailed to erase partition");
+			rx_cmd(dev);
+			return;
+		}
+		tx_status(dev, "OKAY");
+		rx_cmd(dev);
+		return;
+	}
+
+	if (memcmp(cmdbuf, "boot:", 4) == 0) {
+		debug("boot\n");
+
+	}
+
 	/*
-	 * TODO: need to add erase, boot, flash, flashall, update command
+	 * TODO: need to add flash, flashall, update command
 	 */
 
 	tx_status(dev, "FAILinvalid command");
@@ -634,6 +806,12 @@ int fastboot_init(void)
 	ret = usb_gadget_register_driver(&fastboot_driver);
 	if (ret)
 		return ret;
+
+	ret = mtdparts_init();
+	if (ret != 0) {
+		printf("Error initializing mtdparts!\n");
+		return ret;
+	}
 
 	return 0;
 }
