@@ -96,6 +96,8 @@
 /* for do_reset() prototype */
 extern int do_reset(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[]);
 
+extern int do_bootm(cmd_tbl_t *, int, int, char * const []);
+
 struct fastboot_dev {
 	struct usb_gadget	*gadget;
 	struct usb_request	*req;
@@ -115,7 +117,7 @@ static char		serial[20] = "20120115";
 static unsigned rx_addr;
 static unsigned rx_length;
 
-unsigned kernel_addr = 0x33000000;
+unsigned kernel_addr = CONFIG_SYS_LOAD_ADDR;
 unsigned kernel_size = 0;
 
 static u8 ctrl_req[USB_BUFSIZ];
@@ -315,32 +317,10 @@ static void num_to_hex8(unsigned n, char *out)
 	out[8] = 0;
 }
 
-#if 0
-static int
-fastboot_flash_find_ptn(const char *name, struct part_info **part)
-{
-	struct mtd_device	*dev;
-	struct part_info	*part;
-
-	nand_info_t		*nand;
-
-
-	return 0;
-
-
-	ret = nand_erase_opts(nand, &opts);
-	printf("%s\n", ret ? "ERROR" : "OK");
-
-	return ret == 0 ? 0 : 1;
-}
-#endif
-
 static int fastboot_nand_erase(const char *name)
 {
 	struct mtd_device	*dev;
 	struct part_info	*part;
-	struct mtd_info		*mtd;
-	char			mtd_dev[16];
 	u8			pnum;
 
 	nand_erase_options_t opts;
@@ -350,14 +330,6 @@ static int fastboot_nand_erase(const char *name)
 		return -ENODEV;
 	}
 	printf("erasing '%s'\n", part->name);
-#if 0
-	sprintf(mtd_dev, "%s%d", MTD_DEV_TYPE(dev->id->type), dev->id->num);
-
-	mtd = get_mtd_device_nm(mtd_dev);
-	if (IS_ERR(mtd)) {
-		printf("Partition %s not found on device %s!\n", part->name, mtd_dev);
-	}
-#endif
 
 	memset(&opts, 0, sizeof(opts));
 	opts.length = part->size;
@@ -387,6 +359,35 @@ static int fastboot_nand_write(const char *name)
 
 	return nand_write_skip_bad(&nand_info[0], part->offset, &part->size,
 					(u8 *)kernel_addr);
+}
+
+static int fastboot_image_is_boot(void)
+{
+	u8 *tmp;
+
+	/* TODO find a better way to figure out image is U-Boot or uImage */
+	tmp = (u8 *)kernel_addr;
+	if ((tmp[0x800 + 3] == 0xea) && (tmp[0x800 + 5] == 0xf0))
+		return 1;
+	return 0;
+}
+
+static int fastboot_boot_linux(void)
+{
+	if (fastboot_image_is_boot()) {
+		printf ("Starting at 0x%08x ...\n", kernel_addr + 0x800);
+		do_go_exec((void *) kernel_addr + 0x800);
+	} else {
+		char addr[16];
+		sprintf(addr, "%08x", kernel_addr + 0x800);
+
+		printf("booting linux at 0x%s ...\n", addr);
+		setenv("loadaddr", addr);
+
+		do_bootm(NULL, 0, 0, NULL);
+	}
+
+	return 0;
 }
 
 static void usb_rx_cmd_complete(struct usb_ep *ep, struct usb_request *req)
@@ -511,10 +512,11 @@ static void usb_rx_cmd_complete(struct usb_ep *ep, struct usb_request *req)
 
 	if (memcmp(cmdbuf, "boot", 4) == 0) {
 		debug("boot not working yet\n");
-		debugX("Starting at 0x%08x ...\n", kernel_addr);
 		tx_status(dev, "OKAY");
-		rx_cmd(dev);
-		do_go_exec((void *) kernel_addr + 0x800);
+		udelay(10000);
+		usb_gadget_disconnect(dev->gadget);
+		fastboot_boot_linux();
+		return;
 	}
 
 	/*
