@@ -45,7 +45,7 @@
 #define usbinfo(fmt, args...)		\
 	serial_printf("%s, %d: "fmt"\n", __func__, __LINE__, ##args)
 
-#if 1
+#if 0
 #define DEBUG_NORMAL	1
 #define DEBUG_VERBOSE	2
 #define usbdbg(fmt, args...)		\
@@ -784,7 +784,7 @@ int s3c2410_udc_irq(void)
 	int pwr_reg;
 	int ep0csr;
 	int i;
-	u32 idx;
+	u32 idx, idx2;
 	unsigned long flags;
 
 	spin_lock_irqsave(&dev->lock, flags);
@@ -899,6 +899,21 @@ int s3c2410_udc_irq(void)
 		}
 	}
 
+	usbd_status = udc_read(S3C2410_UDC_EP_INT_REG);
+
+	/* what else causes this interrupt? a receive! who is it? */
+	if (!usb_status && !usbd_status && !pwr_reg && !ep0csr) {
+		for (i = 1; i < S3C2410_ENDPOINTS; i++) {
+			idx2 = udc_read(S3C2410_UDC_INDEX_REG);
+			udc_write(i, S3C2410_UDC_INDEX_REG);
+
+			if (udc_read(S3C2410_UDC_OUT_CSR1_REG) & 0x1)
+				s3c2410_udc_handle_ep(&dev->ep[i]);
+
+			/* restore index */
+			udc_write(idx2, S3C2410_UDC_INDEX_REG);
+		}
+	}
 	dprintk(DEBUG_VERBOSE, "irq s3c2410_udc_done.\n");
 
 	/* Restore old index */
