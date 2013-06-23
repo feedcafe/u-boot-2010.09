@@ -156,6 +156,34 @@ static void usb_led_setup_complete(struct usb_ep *ep, struct usb_request *req)
 				req->status, req->actual, req->length);
 }
 
+static int usb_led_set_config(struct usb_led_dev *dev, unsigned number)
+{
+	int			result = 0;
+	struct usb_gadget	*gadget = dev->gadget;
+
+	switch (number) {
+	case 1:
+		result = 0;
+		break;
+	default:
+		result = -EINVAL;
+	case 0:
+		break;
+	}
+
+	if (result) {
+		usb_gadget_vbus_draw(dev->gadget,
+				dev->gadget->is_otg ? 8 : 100);
+	} else {
+		unsigned power;
+
+		power = 2 * config_desc.bMaxPower;
+		usb_gadget_vbus_draw(dev->gadget, power);
+	}
+
+	return result;
+}
+
 static int
 usb_led_setup(struct usb_gadget *gadget, const struct usb_ctrlrequest *ctrl)
 {
@@ -167,7 +195,7 @@ usb_led_setup(struct usb_gadget *gadget, const struct usb_ctrlrequest *ctrl)
 	u16			wLength = le16_to_cpu(ctrl->wLength);
 
 	debug("%s, dev: %p, req: %p\n", __func__, dev, req);
-	debugX("usb control req %02x.%02x v%04x i%04x l%d\n",
+	debug("usb control req %02x.%02x v%04x i%04x l%02x\n",
 			ctrl->bRequestType, ctrl->bRequest,
 			wValue, wIndex, wLength);
 
@@ -200,7 +228,9 @@ usb_led_setup(struct usb_gadget *gadget, const struct usb_ctrlrequest *ctrl)
 		break;
 
 	case USB_REQ_SET_CONFIGURATION:
-		debugX("not available!\n");
+		if (ctrl->bRequestType != 0)
+			break;
+		value = usb_led_set_config(dev, wValue);
 		break;
 
 	case USB_REQ_GET_CONFIGURATION:
@@ -211,13 +241,13 @@ usb_led_setup(struct usb_gadget *gadget, const struct usb_ctrlrequest *ctrl)
 		break;
 
 	default:
-		debugX("usb control req %02x.%02x v%04x i%04x l%d\n",
+		debugX("usb control req %02x.%02x v%04x i%04x l%02x\n",
 				ctrl->bRequestType, ctrl->bRequest,
 				wValue, wIndex, wLength);
 	}
 
 	if (value >=0) {
-		debugX("respond with data transfer before status phase\n");
+		debug("respond with data transfer before status phase\n");
 		req->length = value;
 		req->zero = value < wLength
 			&& (value % gadget->ep0->maxpacket) == 0;
