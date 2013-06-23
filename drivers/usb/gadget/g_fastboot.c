@@ -229,7 +229,7 @@ static void rx_data(struct fastboot_dev *dev)
 	struct usb_request *req = dev->rx_req;
 	int err;
 
-	debug("%s\n", __func__);
+	debugX("%s, req->buf: %p\n", __func__, req->buf);
 
 	req->buf = (void *) rx_addr;
 	req->length = (rx_length > USB_DATA_SIZE) ? USB_DATA_SIZE : rx_length;
@@ -258,7 +258,7 @@ static void usb_rx_data_complete(struct usb_ep *ep, struct usb_request *req)
 {
 	struct fastboot_dev *dev = ep->driver_data;
 
-	debug("%s, addr= %x len=%x\n", __func__, rx_addr, rx_length);
+	debugX("%s, addr= %x len=%x\n", __func__, rx_addr, rx_length);
 
 	if (req->status != 0)
 		return;
@@ -328,6 +328,7 @@ static int fastboot_nand_write(const char *name)
 		printf("Partition %s not found!\n", name);
 		return -ENODEV;
 	}
+	return 0;
 
 	return nand_write_skip_bad(&nand_info[0], part->offset,
 					&part->size, (u8 *)kernel_addr);
