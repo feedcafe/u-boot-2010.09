@@ -121,20 +121,22 @@
 /*
  * arch/arm/mach-s3c2440/mach-mini2440.c
  */
-#define MTDIDS_DEFAULT			"nand0=nand"
-#define MTDPARTS_LINUX			"mtdparts=nand:256k(U-Boot),"	\
-					"128k@0x00040000(u-boot-env),"	\
-					"3m@0x00060000(boot),"		\
-					"-(rootfs)"
+#define MTDIDS_DEFAULT		"nand0=nand"
+#define MTDPARTS_LINUX		"mtdparts=nand:256k(U-Boot),"	\
+				"128k@0x00040000(u-boot-env),"	\
+				"3m@0x00060000(boot),"		\
+				"-(rootfs)"
 
-#define MTDPARTS_DEFAULT		"mtdparts=nand:"	\
-					"256k(x-loader),"	\
-					"128k(u-boot-env),"	\
-					"3m(recovery),"		\
-					"5m(boot),"		\
-					"30m(system),"		\
-					"10m(cache),"		\
-					"-(userdata)"
+#define MTDPARTS_ANDROID	"mtdparts=nand:"	\
+				"256k(x-loader),"	\
+				"128k(u-boot-env),"	\
+				"3m(recovery),"		\
+				"2m(boot),"		\
+				"30m(system),"		\
+				"10m(cache),"		\
+				"-(userdata)"
+
+#define MTDPARTS_DEFAULT	MTDPARTS_ANDROID
 
 #define CONFIG_USB_GADGET
 #define CONFIG_USB_GADGET_S3C2410
@@ -171,8 +173,13 @@
 		"mtdparts=" MTDPARTS_DEFAULT "\0"
 
 #define CONFIG_BOOTDELAY	9
-#define CONFIG_BOOTARGS		"root=/dev/ram0 rdinit=linuxrc " \
+#define CONFIG_BOOTARGS_RAM	"root=/dev/ram0 rdinit=linuxrc " \
 				"console=ttySAC0"
+
+#define CONFIG_BOOTARGS_CRAMFS	"rdinit=linuxrc console=ttySAC0 " \
+				"root=1f03 rootfstype=cramfs"
+
+#define CONFIG_BOOTARGS		CONFIG_BOOTARGS_CRAMFS
 
 #define CONFIG_ETHADDR		00:19:87:07:27:15
 #define CONFIG_NETMASK          255.255.255.0
