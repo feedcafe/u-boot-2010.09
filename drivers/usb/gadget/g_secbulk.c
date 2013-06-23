@@ -31,8 +31,6 @@
 #include <linux/usb/gadget.h>
 #include <linux/usb/compat.h>
 
-#define DEBUG
-
 #ifdef DEBUG
 #undef debug
 #define debug(fmt,args...)	serial_printf (fmt ,##args)
@@ -73,6 +71,9 @@ struct secbulk_dev {
 static char		manufacturer[64] = DRIVER_MANUFACTURER;
 static char		product_desc[30] = DRIVER_DESC;
 static char		serial[20] = "Date: Jan 11, 2012";
+
+volatile u32 download_addr;
+volatile u32 count;
 
 /* Static strings, in UTF-8 (for simplicity we use only ASCII characters */
 static struct usb_string strings[] = {
@@ -149,6 +150,17 @@ static const struct usb_descriptor_header *fs_function[] = {
 	NULL,
 };
 
+static u_int16_t secbulk_checksum(const unsigned char *data, u_int32_t len)
+{
+	u_int16_t checksum = 0;
+	int i;
+
+	for (i = 0; i < len; i++)
+		checksum += data[i];
+
+	return checksum;
+}
+
 static int config_buf(struct usb_gadget *gadget,
 		u8 *buf, u8 type, unsigned index)
 {
@@ -166,6 +178,66 @@ static int config_buf(struct usb_gadget *gadget,
 	return len;
 }
 
+static void secbulk_handle_bulk_out(struct usb_ep *ep, struct usb_request *req)
+{
+	static u32	downloaded_count = 0;
+	static int	first_pkt = 1;
+	u8		*tmp_addr;
+	u8		*buf;
+	u16		checksum1;	/* read from usb packet */
+	u16		checksum2;	/* calculated from memory */
+	unsigned	nb;
+
+	buf = req->buf;
+
+	if (first_pkt) {
+		first_pkt = 0;
+		download_addr = *((u8 *)(buf + 0)) +
+			(*((u8 *)(buf + 1)) << 8) +
+			(*((u8 *)(buf + 2)) << 16) +
+			(*((u8 *)(buf + 3)) << 24);
+
+		count = *((u8 *)(buf + 4)) +
+			(*((u8 *)(buf + 5)) << 8) +
+			(*((u8 *)(buf + 6)) << 16) +
+			(*((u8 *)(buf + 7)) << 24);
+
+		buf = req->buf + 8;
+		req->actual -= 8;
+
+		debugX("load addr: %#x, total count: %d(%x)\n",
+				download_addr, count, count);
+	}
+
+	tmp_addr = (u8 *)download_addr + downloaded_count;
+
+	nb = req->actual;
+
+	memcpy(tmp_addr, buf, nb);
+	downloaded_count += nb;
+
+	if (downloaded_count == count - 8) {
+		tmp_addr = (u8 *)(download_addr + downloaded_count);
+		checksum1 = *(tmp_addr - 2) + (*(tmp_addr - 1) << 8);
+
+		/*
+		 * calculate checksum, last two bytes which
+		 * is checksum data is excluded
+		 */
+		checksum2 = secbulk_checksum((u8 *)download_addr,
+				downloaded_count - 2);
+		if (checksum1 == checksum2)
+			debugX("done, checksum: %04x\n", checksum1);
+		else
+			debugX("failed, checksum: %04x, %04x\n",
+					checksum1, checksum2);
+		first_pkt = 1;
+		download_addr = 0;
+		count = 0;
+		downloaded_count = 0;
+	}
+}
+
 static void secbulk_setup_complete(struct usb_ep *ep, struct usb_request *req)
 {
 	if (req->status || req->actual != req->length)
@@ -175,6 +247,44 @@ static void secbulk_setup_complete(struct usb_ep *ep, struct usb_request *req)
 
 static void secbulk_rx_complete(struct usb_ep *ep, struct usb_request *req)
 {
+	int			status = req->status;
+
+	debug("%s, status: %d\n", __func__, status);
+
+	switch (status) {
+	case 0:
+		/* bulk data received from host, deal with it and queue
+		 * later for next transfer, see below
+		 */
+		secbulk_handle_bulk_out(ep, req);
+		break;
+	case -ECONNABORTED:	/* hardware forced ep reset */
+	case -ECONNRESET:	/* request dequeued */
+	case -ESHUTDOWN:	/* disconnected from host */
+		debug("%s ep shutdown --> %d, %d/%d\n", ep->name,
+				status, req->actual, req->length);
+		kfree(req->buf);
+		usb_ep_free_request(ep, req);
+		return;
+
+	case -EOVERFLOW:	/* buffer overrun on read means that
+				 * we did not provide a big enough buffer
+				 */
+		break;
+	default:
+		debug("%s complete --> %d, %d/%d\n", ep->name,
+				status, req->actual, req->length);
+	case -EREMOTEIO:
+		break;
+	}
+
+	status = usb_ep_queue(ep, req, GFP_ATOMIC);
+	if (status) {
+		error("kill %s: resubmit %d bytes --> %d\n",
+				ep->name, req->length, status);
+		usb_ep_set_halt(ep);
+		/* FIXME recover later ... somehow */
+	}
 
 }
 
@@ -226,6 +336,12 @@ static int secbulk_set_cfg(struct secbulk_dev *dev)
 	dev->rx_req = secbulk_alloc_req(dev->out_ep, USB_BUFSIZ, GFP_KERNEL);
 	if (!dev->rx_req)
 		return -ENOMEM;
+
+	dev->rx_req->complete = secbulk_rx_complete;
+	err = usb_ep_queue(dev->out_ep, dev->rx_req, GFP_ATOMIC);
+	if (err) {
+		error("%s queue req: %d\n", dev->out_ep->name, err);
+	}
 
 	return 0;
 }
