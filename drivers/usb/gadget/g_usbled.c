@@ -3,6 +3,8 @@
  *
  * Fudong Bai <fudongbai@gmail.com>
  *
+ * Based on drivers/usb/gadget/ether.c
+ *
  * Our four on-board LEDs are controlled by host-side usbled driver
  * through endpoint 0, the original driver is:
  * kernel/drivers/usb/misc/usbled.c
@@ -28,6 +30,8 @@
 #include <common.h>
 #include <malloc.h>
 #include <asm/errno.h>
+#include <asm/io.h>
+#include <asm/arch/s3c24x0_cpu.h>
 
 #include <linux/usb/ch9.h>
 #include <linux/usb/gadget.h>
@@ -159,7 +163,6 @@ static void usb_led_setup_complete(struct usb_ep *ep, struct usb_request *req)
 static int usb_led_set_config(struct usb_led_dev *dev, unsigned number)
 {
 	int			result = 0;
-	struct usb_gadget	*gadget = dev->gadget;
 
 	switch (number) {
 	case 1:
@@ -182,6 +185,20 @@ static int usb_led_set_config(struct usb_led_dev *dev, unsigned number)
 	}
 
 	return result;
+}
+
+static int usb_led_switch(const struct usb_ctrlrequest *ctrl)
+{
+	struct s3c24x0_gpio * const gpio = s3c24x0_get_base_gpio();
+	short val;
+
+	val = le16_to_cpu(ctrl->wIndex);
+
+	debug("%s: data: %#x, %#x\n", __func__, val, (~val << 5));
+	writel(~val << 5, &gpio->GPBDAT);
+	debug("%s: read data: %#x\n", __func__, readl(&gpio->GPBDAT));
+
+	return 0;
 }
 
 static int
@@ -240,6 +257,10 @@ usb_led_setup(struct usb_gadget *gadget, const struct usb_ctrlrequest *ctrl)
 		value = min(wLength, (u16) 1);
 		break;
 
+	case USB_REQ_SET_SECURITY_DATA:
+		usb_led_switch(ctrl);
+		break;
+
 	default:
 		debugX("usb control req %02x.%02x v%04x i%04x l%02x\n",
 				ctrl->bRequestType, ctrl->bRequest,
@@ -287,7 +308,6 @@ static int usb_led_bind(struct usb_gadget *gadget)
 
 	dev->gadget = gadget;
 	set_gadget_data(gadget, dev);
-	//gadget->ep0->driver_data = dev;
 
 	return 0;
 }
@@ -304,7 +324,14 @@ static void usb_led_unbind(struct usb_gadget *gadget)
 
 static void usb_led_disconnect(struct usb_gadget *gadget)
 {
+	struct usb_led_dev *dev = get_gadget_data(gadget);
 
+	debug("%s\n", __func__);
+
+	if (dev->config == 0)
+		return;
+
+	dev->config = 0;
 }
 
 static struct usb_gadget_driver usb_led_driver = {
