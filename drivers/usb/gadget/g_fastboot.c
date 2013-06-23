@@ -374,6 +374,21 @@ static int fastboot_nand_erase(const char *name)
 	return 0;
 }
 
+static int fastboot_nand_write(const char *name)
+{
+	struct mtd_device	*dev;
+	struct part_info	*part;
+	u8			pnum;
+
+	if (find_dev_and_part(name, &dev, &pnum, &part)) {
+		printf("Partition %s not found!\n", name);
+		return -ENODEV;
+	}
+
+	return nand_write_skip_bad(&nand_info[0], part->offset, &part->size,
+					(u8 *)kernel_addr);
+}
+
 static void usb_rx_cmd_complete(struct usb_ep *ep, struct usb_request *req)
 {
 	struct fastboot_dev	*dev = ep->driver_data;
@@ -438,6 +453,7 @@ static void usb_rx_cmd_complete(struct usb_ep *ep, struct usb_request *req)
 		if (fastboot_nand_erase(cmdbuf + 6)) {
 			tx_status(dev, "FAILfailed to erase partition");
 			rx_cmd(dev);
+			printf("- FAIL\n");
 			return;
 		}
 		tx_status(dev, "OKAY");
@@ -471,13 +487,22 @@ static void usb_rx_cmd_complete(struct usb_ep *ep, struct usb_request *req)
 				return;
 			}
 		}
-#endif
 
 
 		if (!strcmp(part->name, "system") || !strcmp(part->name, "userdata"))
 			extra = 64;
 		else
 			kernel_size = (kernel_size + 2047) & (~2047);
+#endif
+
+		printf("writing '%s' (%d bytes)", part->name, kernel_size);
+		if (fastboot_nand_write(part->name)) {
+			tx_status(dev, "FAILnand write failed");
+			rx_cmd(dev);
+			return;
+		} else {
+			printf(" - OKAY");
+		}
 
 		tx_status(dev, "OKAY");
 		rx_cmd(dev);
