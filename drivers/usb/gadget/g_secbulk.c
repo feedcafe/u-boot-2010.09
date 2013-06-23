@@ -59,9 +59,6 @@
 /* secbulk has only one configuration, it's 1 */
 #define SECBULK_CONFIG		1
 
-#define GFP_ATOMIC ((gfp_t) 0)
-#define GFP_KERNEL ((gfp_t) 0)
-
 struct secbulk_dev {
 	struct usb_gadget	*gadget;
 	struct usb_request	*req;

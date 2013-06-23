@@ -59,9 +59,6 @@
 /* fastboot has only one configuration, it's 1 */
 #define FASTBOOT_CONFIG		0x01
 
-#define GFP_ATOMIC ((gfp_t) 0)
-#define GFP_KERNEL ((gfp_t) 0)
-
 /* for do_reset() prototype */
 extern int do_reset(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[]);
 

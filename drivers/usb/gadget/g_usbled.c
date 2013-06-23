@@ -58,9 +58,6 @@
 /* big enough to hold our biggest descriptor */
 #define USB_BUFSIZ		256
 
-#define GFP_ATOMIC ((gfp_t) 0)
-#define GFP_KERNEL ((gfp_t) 0)
-
 struct usb_led_dev {
 	struct usb_gadget	*gadget;
 	struct usb_request	*req;
