@@ -82,6 +82,10 @@ extern int usb_led_init(void);
 extern int secbulk_init(void);
 #endif
 
+#if defined(CONFIG_USB_G_FASTBOOT)
+extern int fastboot_init(void);
+#endif
+
 #ifndef CONFIG_IDENT_STRING
 #define CONFIG_IDENT_STRING ""
 #endif
@@ -465,6 +469,10 @@ extern void davinci_eth_set_mac_addr (const u_int8_t *addr);
 
 #if defined(CONFIG_S3C24X0_SECBULK) || defined(CONFIG_USB_G_SECBULK)
 	secbulk_init();
+#endif
+
+#if defined(CONFIG_USB_G_FASTBOOT)
+	fastboot_init();
 #endif
 
 	/* main_loop() can return to retry autoboot, if so just run it again. */
