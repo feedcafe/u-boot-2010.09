@@ -95,3 +95,61 @@ This is a mini howto to learn about mini2440
 
 	SMDK2440 # reset
 	resetting ...
+
+4. fastboot: flash u-boot.bin to nand
+  a. before nand write
+    SMDK2440 # res
+    resetting ...
+
+    U-Boot 2010.09-00000-g2481d7b-dirty (Jun 23 2013 - 20:09:50)
+
+    DRAM:  64 MiB
+    Flash: 1 MiB
+    NAND:  256 MiB
+    *** Warning - bad CRC or NAND, using default environment
+
+    In:    serial
+    Out:   serial
+    Err:   serial
+    Net:   dm9000
+    s3c2410_udc gadget driver registered!
+    Hit any key to stop autoboot:  0
+    SMDK2440 #
+
+    b. erase U-Boot partition
+    $ fastboot erase U-Boot
+                  erasing 'U-Boot'... OKAY [  0.014s]
+    finished. total time: 0.014s
+
+    SMDK2440 # erasing 'U-Boot'
+    Erasing at 0x2000000000004 --   0% complete.
+    partition 'U-Boot' erased
+    from 0 size: 40000
+
+    c. flash new U-Boot image to nand
+    $ fastboot flash U-Boot u-boot.bin
+         sending 'U-Boot' (172 KB)... OKAY [  0.178s]
+                  writing 'U-Boot'... OKAY [  0.426s]
+    finished. total time: 0.604s
+
+    SMDK2440 # recv data: addr=33000000 size=2b2a8
+    writing 'U-Boot' (176808 bytes) - OKAY
+
+    c. reset
+    SMDK2440 # res
+    resetting ...
+
+    U-Boot 2010.09-00000-gc797158 (Jun 23 2013 - 20:12:35)
+
+    DRAM:  64 MiB
+    Flash: 1 MiB
+    NAND:  256 MiB
+    *** Warning - bad CRC or NAND, using default environment
+
+    In:    serial
+    Out:   serial
+    Err:   serial
+    Net:   dm9000
+    s3c2410_udc gadget driver registered!
+    Hit any key to stop autoboot:  0
+    SMDK2440 #
