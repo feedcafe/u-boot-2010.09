@@ -109,10 +109,23 @@
 #define	CONFIG_CMD_PING
 
 #define CONFIG_CMD_NAND
+#define CONFIG_CMD_MTDPARTS
 #define CONFIG_SYS_MAX_NAND_DEVICE	1
 #define CONFIG_SYS_NAND_BASE		0x4E000000
 #define CONFIG_NAND_S3C2410
 #define CONFIG_MTD_NAND_VERIFY_WRITE
+
+#define CONFIG_MTD_DEVICE
+#define CONFIG_MTD_PARTITIONS
+
+/*
+ * arch/arm/mach-s3c2440/mach-mini2440.c
+ */
+#define MTDIDS_DEFAULT			"nand0=nand"
+#define MTDPARTS_DEFAULT		"mtdparts=nand:256k(U-Boot),"	\
+					"128k@0x40000(u-boot-env),"	\
+					"3m@0x60000(boot),"		\
+					"-(test)"
 
 #define CONFIG_USB_GADGET
 #define CONFIG_USB_GADGET_S3C2410
@@ -145,10 +158,13 @@
 #define	CONFIG_USBD_MANUFACTURER	"OpenMoko, Inc"
 #define	CONFIG_EXTRA_ENV_SETTINGS	\
 		"usbtty=cdc_acm\0"	\
-		"stderr=usbtty\0stdout=usbtty\0stdin=usbtty\0"
+		"stderr=usbtty\0stdout=usbtty\0stdin=usbtty\0"	\
+		"mtdparts=" MTDPARTS_DEFAULT "\0"
 
 #define CONFIG_BOOTDELAY	9
-#define CONFIG_BOOTARGS		"root=/dev/ram0 rdinit=linuxrc console=ttySAC0"
+#define CONFIG_BOOTARGS		"root=/dev/ram0 rdinit=linuxrc" \
+				"console=ttySAC0"
+
 #define CONFIG_ETHADDR		00:19:87:07:27:15
 #define CONFIG_NETMASK          255.255.255.0
 #define CONFIG_IPADDR		192.168.1.15
