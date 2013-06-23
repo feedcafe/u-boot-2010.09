@@ -259,8 +259,6 @@ nand_load:
 	bl	cpu_init_crit
 #endif
 
-	/* mov	r10, lr */
-
 	@ reset NAND
 	mov	r1, #CONFIG_SYS_NAND_BASE
 	ldr	r2, =((7<<12)|(7<<8)|(7<<4)|(0<<0))
@@ -301,10 +299,6 @@ nand_load:
 #endif
 	sub	sp, r0, #12	/* leave 3 words for abort-stack	*/
 	
-	@ get read to call C functions (for nand_read())
-	@ldr	sp, DW_STACK_START	@ setup stack pointer
-	@mov	fp, #0	@ no previous frame, so fp=0
-
 	@ copy U-Boot to RAM
 	ldr	r0, =TEXT_BASE
 	mov	r1, #0x0
@@ -376,7 +370,7 @@ clbss_l:str	r2, [r0]		/* clear loop...                    */
 	ble	clbss_l
 
 #if	defined(CONFIG_MINI2440_LED)
-	@?0„2 LED1~4 on buzzer on
+	@ LED1~4 on buzzer on
 	mov	r1, #GPIO_CTL_BASE
 	add	r1, r1, #oGPIO_B
 	ldr	r2,=0x155aa
