@@ -456,8 +456,10 @@ static void usb_rx_cmd_complete(struct usb_ep *ep, struct usb_request *req)
 		}
 
 #if 0
-		if (!strcmp(part->name, "boot") || !strcmp(part->name, "recovery")) {
-			if (memcmp((void *)kernel_addr, BOOT_MAGIC, BOOT_MAGIC_SIZE)) {
+		if (!strcmp(part->name, "boot") ||
+				!strcmp(part->name, "recovery")) {
+			if (memcmp((void *)kernel_addr, BOOT_MAGIC,
+						BOOT_MAGIC_SIZE)) {
 				tx_status(dev, "FAILimage is not a boot image");
 				rx_cmd(dev);
 				return;
@@ -465,7 +467,8 @@ static void usb_rx_cmd_complete(struct usb_ep *ep, struct usb_request *req)
 		}
 
 
-		if (!strcmp(part->name, "system") || !strcmp(part->name, "userdata"))
+		if (!strcmp(part->name, "system") ||
+				!strcmp(part->name, "userdata"))
 			extra = 64;
 		else
 			kernel_size = (kernel_size + 2047) & (~2047);
@@ -486,6 +489,10 @@ static void usb_rx_cmd_complete(struct usb_ep *ep, struct usb_request *req)
 	}
 
 	if (memcmp(cmdbuf, "boot", 4) == 0) {
+		/* TODO boot command can download and run u-boot, but cannot
+		 * boot uImage, since this feature is not that important and
+		 * rarely used, may be finished later sometime.
+		 */
 		debug("boot not working yet\n");
 		tx_status(dev, "OKAY");
 		udelay(10000);
