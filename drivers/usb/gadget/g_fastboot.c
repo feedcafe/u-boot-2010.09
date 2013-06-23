@@ -84,7 +84,7 @@ static char		serial[20] = "20120115";
 static unsigned rx_addr;
 static unsigned rx_length;
 
-static char *cmdbuf;
+static u8 ctrl_req[USB_BUFSIZ];
 
 /* Static strings, in UTF-8 (for simplicity we use only ASCII characters */
 static struct usb_string strings[] = {
@@ -98,9 +98,6 @@ static struct usb_gadget_strings stringtab = {
 	.language	= 0x0409,	/* en_US */
 	.strings	= strings,
 };
-
-static u8 ctrl_req[USB_BUFSIZ];
-
 
 static struct usb_device_descriptor device_desc = {
 	.bLength		= sizeof device_desc,
@@ -175,13 +172,16 @@ static const struct usb_descriptor_header *fs_function[] = {
 
 static void usb_rx_cmd_complete(struct usb_ep *ep, struct usb_request *req);
 static void usb_rx_data_complete(struct usb_ep *ep, struct usb_request *req);
+static void usb_tx_status_complete(struct usb_ep *ep, struct usb_request *req);
 
 static void rx_cmd(struct fastboot_dev *dev)
 {
 	struct usb_request *req = dev->rx_req;
 	int err;
 
-	req->buf = cmdbuf;
+	debug("%s\n", __func__);
+
+	//req->buf = cmdbuf;
 	req->length = USB_DATA_SIZE;
 	req->complete = usb_rx_cmd_complete;
 	err = usb_ep_queue(dev->out_ep, req, GFP_ATOMIC);
@@ -193,6 +193,8 @@ static void rx_data(struct fastboot_dev *dev)
 {
 	struct usb_request *req = dev->rx_req;
 	int err;
+
+	debug("%s\n", __func__);
 
 	req->buf = (void *) rx_addr;
 	req->length = (rx_length > USB_DATA_SIZE) ? USB_DATA_SIZE : rx_length;
@@ -211,7 +213,7 @@ static void tx_status(struct fastboot_dev *dev, const char *status)
 
 	memcpy(req->buf, status, len);
 	req->length = len;
-	req->complete = 0;
+	req->complete = usb_tx_status_complete;
 	err = usb_ep_queue(dev->in_ep, req, GFP_ATOMIC);
 	if (err)
 		error("%s queue req: %d\n", dev->out_ep->name, err);
@@ -241,9 +243,13 @@ static void usb_rx_data_complete(struct usb_ep *ep, struct usb_request *req)
 }
 static void usb_rx_cmd_complete(struct usb_ep *ep, struct usb_request *req)
 {
-	struct fastboot_dev *dev = ep->driver_data;
+	struct fastboot_dev	*dev = ep->driver_data;
+	char *cmdbuf;
 
-	debug("%s\n", __func__);
+	cmdbuf = req->buf;
+
+	debug("%s, cmd: %s\n", __func__, cmdbuf);
+	debug("%s, cmd: %p %p, %d\n", __func__, cmdbuf, dev, req->status);
 
 	if (req->status != 0)
 		return;
@@ -284,6 +290,13 @@ static void usb_rx_cmd_complete(struct usb_ep *ep, struct usb_request *req)
 	rx_cmd(dev);
 }
 
+static void usb_tx_status_complete(struct usb_ep *ep, struct usb_request *req)
+{
+	if (req->status || req->actual != req->length)
+		debug("setup complete --> %d, %d/%d\n",
+				req->status, req->actual, req->length);
+}
+
 static int config_buf(struct usb_gadget *gadget,
 		u8 *buf, u8 type, unsigned index)
 {
@@ -301,11 +314,6 @@ static int config_buf(struct usb_gadget *gadget,
 	return len;
 }
 
-static void fastboot_handle_bulk_out(struct usb_ep *ep, struct usb_request *req)
-{
-	debugX("%s\n", __func__);
-}
-
 static void fastboot_setup_complete(struct usb_ep *ep, struct usb_request *req)
 {
 	if (req->status || req->actual != req->length)
@@ -313,6 +321,7 @@ static void fastboot_setup_complete(struct usb_ep *ep, struct usb_request *req)
 				req->status, req->actual, req->length);
 }
 
+#if 0
 static void fastboot_rx_complete(struct usb_ep *ep, struct usb_request *req)
 {
 	int status = req->status;
@@ -354,6 +363,7 @@ static void fastboot_rx_complete(struct usb_ep *ep, struct usb_request *req)
 	}
 
 }
+#endif
 
 static void fastboot_reset_config(struct fastboot_dev *dev)
 {
@@ -407,17 +417,19 @@ static int fastboot_set_cfg(struct fastboot_dev *dev)
 	dev->out_ep->driver_data = dev;
 
 	/* allocate buffer for bulk in/out endpoint */
-	/* TODO fill in ep */
 
-	dev->rx_req = fastboot_alloc_req(dev->out_ep, USB_BUFSIZ, GFP_KERNEL);
+	dev->rx_req = fastboot_alloc_req(dev->out_ep, USB_DATA_SIZE, GFP_KERNEL);
 	if (!dev->rx_req)
 		return -ENOMEM;
 
-	dev->rx_req->complete = fastboot_rx_complete;
+	dev->tx_req = fastboot_alloc_req(dev->in_ep, USB_BUFSIZ, GFP_KERNEL);
+	if (!dev->tx_req)
+		return -ENOMEM;
+
+	dev->rx_req->complete = usb_rx_cmd_complete;
 	err = usb_ep_queue(dev->out_ep, dev->rx_req, GFP_ATOMIC);
-	if (err) {
+	if (err)
 		error("%s queue req: %d\n", dev->out_ep->name, err);
-	}
 
 	return 0;
 }
