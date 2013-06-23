@@ -274,7 +274,6 @@ static void usb_rx_data_complete(struct usb_ep *ep, struct usb_request *req)
 	if (rx_length > 0) {
 		rx_data(dev);
 	} else {
-		printf("done: %p, cmdbuf: %p\n", req->buf, cmdbuf);
 		req->buf = cmdbuf;
 		tx_status(dev, "OKAY");
 		rx_cmd(dev);
@@ -419,7 +418,7 @@ static void usb_rx_cmd_complete(struct usb_ep *ep, struct usb_request *req)
 		}
 		kernel_size = rx_length;
 
-		debugX("recv data: addr=%x size=%x\n", rx_addr, rx_length);
+		debug("recv data: addr=%x size=%x\n", rx_addr, rx_length);
 		strncpy(status, "DATA", 4);
 		num_to_hex8(rx_length, status + 4);
 		tx_status(dev, status);
