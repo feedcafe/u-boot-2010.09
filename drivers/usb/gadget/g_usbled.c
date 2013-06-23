@@ -3,7 +3,7 @@
  *
  * Fudong Bai <fudongbai@gmail.com>
  *
- * Based on drivers/usb/gadget/ether.c
+ * Based on u-boot-2011.09/drivers/usb/gadget/ether.c
  *
  * Our four on-board LEDs are controlled by host-side usbled driver
  * through endpoint 0, the original driver is:
@@ -70,7 +70,7 @@ struct usb_led_dev {
 
 static char		manufacturer[64] = DRIVER_MANUFACTURER;
 static char		product_desc[30] = DRIVER_DESC;
-static char		serial[15] = "1";
+static char		serial[20] = "Date: Jan 10, 2012";
 
 /* Static strings, in UTF-8 (for simplicity we use only ASCII characters */
 static struct usb_string strings[] = {
