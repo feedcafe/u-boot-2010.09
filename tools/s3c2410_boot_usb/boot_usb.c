@@ -57,7 +57,7 @@ hexdump(const void *data, unsigned int len)
 
 #define QT2410_VENDOR_ID	0x5345
 #define QT2410_PRODUCT_ID	0x1234
-#define QT2410_OUT_EP	0x02
+#define QT2410_OUT_EP	0x03
 #define QT2410_IN_EP	0x81
 
 static struct usb_dev_handle *hdl;
@@ -171,8 +171,8 @@ static int qt2410_send_file(u_int32_t addr, void *data, u_int32_t len)
 }
 #endif
 
-#define KERNEL_RAM_BASE	0x30008000
-//#define KERNEL_RAM_BASE	0x33F80000
+//#define KERNEL_RAM_BASE	0x30008000
+#define KERNEL_RAM_BASE	0x33000000
 
 int main(int argc, char **argv)
 {
@@ -180,6 +180,7 @@ int main(int argc, char **argv)
 	char *filename, *prog;
 	struct stat st;
 	int fd;
+	int rc;
 	u_int32_t word = 0x7c7c7c7c;
 
 	usb_init();
@@ -225,7 +226,8 @@ int main(int argc, char **argv)
 	if (!prog)
 		exit(1);
 
-	if (qt2410_send_file(KERNEL_RAM_BASE, prog, st.st_size)) {
+	rc = qt2410_send_file(KERNEL_RAM_BASE, prog, st.st_size);
+	if (rc < 0) {
 		printf("Error downloading program\n");
 		exit(1);
 	}
