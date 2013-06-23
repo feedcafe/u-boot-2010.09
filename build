@@ -1,2 +1,6 @@
-#find . -name .depend |xargs rm
-make&&cp u-boot.bin /tftpboot/
+# find . -name .depend |xargs rm
+# make&&cp u-boot.bin /tftpboot/
+make
+fastboot erase x-loader
+fastboot flash x-loader u-boot.bin
+fastboot reboot
