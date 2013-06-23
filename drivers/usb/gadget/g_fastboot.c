@@ -47,17 +47,23 @@
 #define FASTBOOT_VENDOR_ID	0x18d1
 #define FASTBOOT_PRODUCT_ID	0xbabe
 
+#define FASTBOOT_VERSION	"0.5"
+
 #define DRIVER_DESC		"Android 1.0"
 #define DRIVER_MANUFACTURER	"Google, Inc"
 
 /* big enough to hold our biggest descriptor */
 #define USB_BUFSIZ		256
+#define USB_DATA_SIZE		4096
 
 /* fastboot has only one configuration, it's 1 */
 #define FASTBOOT_CONFIG		0x01
 
 #define GFP_ATOMIC ((gfp_t) 0)
 #define GFP_KERNEL ((gfp_t) 0)
+
+/* for do_reset() prototype */
+extern int do_reset(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[]);
 
 struct fastboot_dev {
 	struct usb_gadget	*gadget;
@@ -75,8 +81,10 @@ static char		manufacturer[64] = DRIVER_MANUFACTURER;
 static char		product_desc[30] = DRIVER_DESC;
 static char		serial[20] = "20120115";
 
-volatile u32 download_addr;
-volatile u32 count;
+static unsigned rx_addr;
+static unsigned rx_length;
+
+static char *cmdbuf;
 
 /* Static strings, in UTF-8 (for simplicity we use only ASCII characters */
 static struct usb_string strings[] = {
@@ -165,6 +173,117 @@ static const struct usb_descriptor_header *fs_function[] = {
 	NULL,
 };
 
+static void usb_rx_cmd_complete(struct usb_ep *ep, struct usb_request *req);
+static void usb_rx_data_complete(struct usb_ep *ep, struct usb_request *req);
+
+static void rx_cmd(struct fastboot_dev *dev)
+{
+	struct usb_request *req = dev->rx_req;
+	int err;
+
+	req->buf = cmdbuf;
+	req->length = USB_DATA_SIZE;
+	req->complete = usb_rx_cmd_complete;
+	err = usb_ep_queue(dev->out_ep, req, GFP_ATOMIC);
+	if (err)
+		error("%s queue req: %d\n", dev->out_ep->name, err);
+}
+
+static void rx_data(struct fastboot_dev *dev)
+{
+	struct usb_request *req = dev->rx_req;
+	int err;
+
+	req->buf = (void *) rx_addr;
+	req->length = (rx_length > USB_DATA_SIZE) ? USB_DATA_SIZE : rx_length;
+	req->complete = usb_rx_data_complete;
+	err = usb_ep_queue(dev->out_ep, req, GFP_ATOMIC);
+	if (err)
+		error("%s queue req: %d\n", dev->out_ep->name, err);
+}
+
+static void tx_status(struct fastboot_dev *dev, const char *status)
+{
+	struct usb_request *req = dev->tx_req;
+	int err;
+
+	int len = strlen(status);
+
+	memcpy(req->buf, status, len);
+	req->length = len;
+	req->complete = 0;
+	err = usb_ep_queue(dev->in_ep, req, GFP_ATOMIC);
+	if (err)
+		error("%s queue req: %d\n", dev->out_ep->name, err);
+}
+
+static void usb_rx_data_complete(struct usb_ep *ep, struct usb_request *req)
+{
+	struct fastboot_dev *dev = ep->driver_data;
+
+	debug("%s\n", __func__);
+
+	if (req->status != 0)
+		return;
+
+	if (req->actual > rx_length)
+		req->actual = rx_length;
+
+	rx_addr += req->actual;
+	rx_length -= req->actual;
+
+	if (rx_length > 0) {
+		rx_data(dev);
+	} else {
+		tx_status(dev, "OKAY");
+		rx_cmd(dev);
+	}
+}
+static void usb_rx_cmd_complete(struct usb_ep *ep, struct usb_request *req)
+{
+	struct fastboot_dev *dev = ep->driver_data;
+
+	debug("%s\n", __func__);
+
+	if (req->status != 0)
+		return;
+
+	if (req->actual > USB_DATA_SIZE)
+		req->actual = USB_DATA_SIZE;
+	cmdbuf[req->actual] = 0;
+
+	if (memcmp(cmdbuf, "reboot", 6) == 0) {
+		tx_status(dev, "OKAY");
+		rx_cmd(dev);
+		udelay(100000);
+		do_reset(NULL, 0, 0, NULL);
+	}
+
+	if (memcmp(cmdbuf, "getvar:", 7) == 0) {
+		char resp[64];
+		strcpy(resp, "OKAY");
+
+		if (!strcmp(cmdbuf + 7, "version"))
+			strcpy(resp + 4, FASTBOOT_VERSION);
+		else if (!strcmp(cmdbuf + 7, "product"))
+			strcpy(resp + 4, product_desc);
+		else if (!strcmp(cmdbuf + 7, "serialno"))
+			strcpy(resp + 4, serial);
+		else
+			;
+		tx_status(dev, resp);
+		rx_cmd(dev);
+		return;
+	}
+
+	/*
+	 * TODO: need to add erase, boot, flash, flashall, update command
+	 */
+
+	tx_status(dev, "FAILinvalid command");
+	rx_cmd(dev);
+}
+
 static int config_buf(struct usb_gadget *gadget,
 		u8 *buf, u8 type, unsigned index)
 {
@@ -196,7 +315,7 @@ static void fastboot_setup_complete(struct usb_ep *ep, struct usb_request *req)
 
 static void fastboot_rx_complete(struct usb_ep *ep, struct usb_request *req)
 {
-	int			status = req->status;
+	int status = req->status;
 
 	debug("%s, status: %d\n", __func__, status);
 
@@ -271,7 +390,14 @@ fastboot_alloc_req(struct usb_ep *ep, unsigned len, gfp_t gfp_flags)
 
 static int fastboot_set_cfg(struct fastboot_dev *dev)
 {
-	int err = 0;
+	int err;
+
+	err = usb_ep_enable(dev->in_ep, &bulk_in_desc);
+	if (err) {
+		error("enable ep %s failed(%d)\n", dev->in_ep->name, err);
+		return err;
+	}
+	dev->in_ep->driver_data = dev;
 
 	err = usb_ep_enable(dev->out_ep, &bulk_out_desc);
 	if (err) {
@@ -280,7 +406,9 @@ static int fastboot_set_cfg(struct fastboot_dev *dev)
 	}
 	dev->out_ep->driver_data = dev;
 
-	/* allocate buffer for bulk out endpoint */
+	/* allocate buffer for bulk in/out endpoint */
+	/* TODO fill in ep */
+
 	dev->rx_req = fastboot_alloc_req(dev->out_ep, USB_BUFSIZ, GFP_KERNEL);
 	if (!dev->rx_req)
 		return -ENOMEM;
