@@ -122,10 +122,19 @@
  * arch/arm/mach-s3c2440/mach-mini2440.c
  */
 #define MTDIDS_DEFAULT			"nand0=nand"
-#define MTDPARTS_DEFAULT		"mtdparts=nand:256k(U-Boot),"	\
-					"128k@0x40000(u-boot-env),"	\
-					"3m@0x60000(boot),"		\
-					"-(test)"
+#define MTDPARTS_LINUX			"mtdparts=nand:256k(U-Boot),"	\
+					"128k@0x00040000(u-boot-env),"	\
+					"3m@0x00060000(boot),"		\
+					"-(rootfs)"
+
+#define MTDPARTS_DEFAULT		"mtdparts=nand:"	\
+					"256k(x-loader),"	\
+					"128k(u-boot-env),"	\
+					"3m(recovery),"		\
+					"3m(boot),"		\
+					"30m(system),"		\
+					"10m(cache),"		\
+					"-(userdata)"
 
 #define CONFIG_USB_GADGET
 #define CONFIG_USB_GADGET_S3C2410
