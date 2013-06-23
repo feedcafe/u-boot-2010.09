@@ -78,7 +78,7 @@ extern int board_udc_init();
 extern int usb_led_init(void);
 #endif
 
-#ifdef CONFIG_S3C24X0_SECBULK
+#if defined(CONFIG_S3C24X0_SECBULK) || defined(CONFIG_USB_G_SECBULK)
 extern int secbulk_init(void);
 #endif
 
@@ -463,7 +463,7 @@ extern void davinci_eth_set_mac_addr (const u_int8_t *addr);
 	usb_led_init();
 #endif
 
-#ifdef CONFIG_S3C24X0_SECBULK
+#if defined(CONFIG_S3C24X0_SECBULK) || defined(CONFIG_USB_G_SECBULK)
 	secbulk_init();
 #endif
 
