@@ -186,7 +186,7 @@ static void secbulk_handle_bulk_out(struct usb_ep *ep, struct usb_request *req)
 	u8		*buf;
 	u16		checksum1;	/* read from usb packet */
 	u16		checksum2;	/* calculated from memory */
-	unsigned	nb;
+	unsigned	nbytes;
 
 	buf = req->buf;
 
@@ -211,10 +211,10 @@ static void secbulk_handle_bulk_out(struct usb_ep *ep, struct usb_request *req)
 
 	tmp_addr = (u8 *)download_addr + downloaded_count;
 
-	nb = req->actual;
+	nbytes = req->actual;
 
-	memcpy(tmp_addr, buf, nb);
-	downloaded_count += nb;
+	memcpy(tmp_addr, buf, nbytes);
+	downloaded_count += nbytes;
 
 	if (downloaded_count == count - 8) {
 		tmp_addr = (u8 *)(download_addr + downloaded_count);
