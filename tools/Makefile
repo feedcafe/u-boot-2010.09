@@ -64,6 +64,7 @@ BIN_FILES-$(CONFIG_INCA_IP) += inca-swap-bytes$(SFX)
 BIN_FILES-y += mkimage$(SFX)
 BIN_FILES-$(CONFIG_USB_LED) += usbled$(SFX)
 BIN_FILES-$(CONFIG_USB_G_LED) += usbled$(SFX)
+BIN_FILES-$(CONFIG_USB_G_SECBULK) += boot_usb$(SFX)
 BIN_FILES-$(CONFIG_NETCONSOLE) += ncb$(SFX)
 BIN_FILES-$(CONFIG_SHA1_CHECK_UB_IMG) += ubsha1$(SFX)
 
@@ -88,6 +89,7 @@ NOPED_OBJ_FILES-y += imximage.o
 NOPED_OBJ_FILES-y += mkimage.o
 NOPED_OBJ_FILES-$(CONFIG_USB_LED) += usbled.o
 NOPED_OBJ_FILES-$(CONFIG_USB_G_LED) += usbled.o
+NOPED_OBJ_FILES-$(CONFIG_USB_G_SECBULK) += boot_usb.o
 OBJ_FILES-$(CONFIG_NETCONSOLE) += ncb.o
 NOPED_OBJ_FILES-y += os_support.o
 OBJ_FILES-$(CONFIG_SHA1_CHECK_UB_IMG) += ubsha1.o
@@ -189,6 +191,10 @@ $(obj)mkimage$(SFX):	$(obj)crc32.o \
 	$(HOSTSTRIP) $@
 
 $(obj)usbled$(SFX):	$(obj)usbled.o
+	$(HOSTCC) $(HOSTCFLAGS) -o $@ $^ -lusb $(HOSTLDFLAGS)
+	$(HOSTSTRIP) $@
+
+$(obj)boot_usb$(SFX):	$(obj)boot_usb.o
 	$(HOSTCC) $(HOSTCFLAGS) -o $@ $^ -lusb $(HOSTLDFLAGS)
 	$(HOSTSTRIP) $@
 
