@@ -236,6 +236,10 @@ static void secbulk_handle_bulk_out(struct usb_ep *ep, struct usb_request *req)
 			debugX("failed, checksum: %04x, %04x\n",
 					checksum1, checksum2);
 		first_pkt = 1;
+
+		printf("Starting at 0x%08x ...\n", download_addr);
+
+		do_go_exec((void *) download_addr);
 		download_addr = 0;
 		count = 0;
 		downloaded_count = 0;
