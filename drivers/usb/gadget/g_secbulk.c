@@ -1,9 +1,13 @@
 /*
+ * g_secbulk.c -- Secbulk Gadget Driver
+ *
  * Copyright (C) 2011
  *
  * Fudong Bai <fudongbai@gmail.com>
  *
- * Based on drivers/usb/gadget/g_usbled.c
+ * Based on
+ * drivers/usb/gadget/g_usbled.c
+ * USB MIDI Gadget Driver, Copyright (C) 2006 Thumtronics Pty Ltd.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -271,11 +275,10 @@ static void secbulk_rx_complete(struct usb_ep *ep, struct usb_request *req)
 				 * we did not provide a big enough buffer
 				 */
 		break;
+
 	default:
 		debug("%s complete --> %d, %d/%d\n", ep->name,
 				status, req->actual, req->length);
-	case -EREMOTEIO:
-		break;
 	}
 
 	status = usb_ep_queue(ep, req, GFP_ATOMIC);
