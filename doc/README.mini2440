@@ -153,3 +153,16 @@ This is a mini howto to learn about mini2440
     s3c2410_udc gadget driver registered!
     Hit any key to stop autoboot:  0
     SMDK2440 #
+
+5. fastboot: flash uImage to nand
+
+$ fastboot erase boot  
+                erasing 'boot'... OKAY [  0.186s]
+finished. total time: 0.186s
+
+$ fastboot flash:raw boot uImage
+creating boot image...
+creating boot image - 1566720 bytes
+      sending 'boot' (1530 KB)... OKAY [  1.537s]
+                writing 'boot'... OKAY [  8.521s]
+finished. total time: 10.058s

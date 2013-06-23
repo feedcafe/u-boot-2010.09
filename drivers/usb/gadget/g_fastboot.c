@@ -117,6 +117,8 @@ static char	serial[20] = "20120115";
 static unsigned rx_addr;
 static unsigned rx_length;
 
+static char	*cmdbuf;
+
 unsigned kernel_addr = CONFIG_SYS_LOAD_ADDR;
 unsigned kernel_size = 0;
 
@@ -229,7 +231,7 @@ static void rx_data(struct fastboot_dev *dev)
 	struct usb_request *req = dev->rx_req;
 	int err;
 
-	debugX("%s, req->buf: %p\n", __func__, req->buf);
+	debug("%s, req->buf: %p\n", __func__, req->buf);
 
 	req->buf = (void *) rx_addr;
 	req->length = (rx_length > USB_DATA_SIZE) ? USB_DATA_SIZE : rx_length;
@@ -258,7 +260,7 @@ static void usb_rx_data_complete(struct usb_ep *ep, struct usb_request *req)
 {
 	struct fastboot_dev *dev = ep->driver_data;
 
-	debugX("%s, addr= %x len=%x\n", __func__, rx_addr, rx_length);
+	debug("%s, addr= %x len=%x\n", __func__, rx_addr, rx_length);
 
 	if (req->status != 0)
 		return;
@@ -272,6 +274,8 @@ static void usb_rx_data_complete(struct usb_ep *ep, struct usb_request *req)
 	if (rx_length > 0) {
 		rx_data(dev);
 	} else {
+		printf("done: %p, cmdbuf: %p\n", req->buf, cmdbuf);
+		req->buf = cmdbuf;
 		tx_status(dev, "OKAY");
 		rx_cmd(dev);
 	}
@@ -328,7 +332,6 @@ static int fastboot_nand_write(const char *name)
 		printf("Partition %s not found!\n", name);
 		return -ENODEV;
 	}
-	return 0;
 
 	return nand_write_skip_bad(&nand_info[0], part->offset,
 					&part->size, (u8 *)kernel_addr);
@@ -368,9 +371,6 @@ static int fastboot_boot_linux(struct usb_gadget *gadget)
 static void usb_rx_cmd_complete(struct usb_ep *ep, struct usb_request *req)
 {
 	struct fastboot_dev	*dev = ep->driver_data;
-	char *cmdbuf;
-
-	cmdbuf = req->buf;
 
 	debug("%s, cmd: %s\n", __func__, cmdbuf);
 	debug("%s, cmd: %p %p, %d\n", __func__, cmdbuf, dev, req->status);
@@ -640,6 +640,8 @@ static int fastboot_set_cfg(struct fastboot_dev *dev)
 	dev->rx_req = fastboot_alloc_req(dev->out_ep, USB_DATA_SIZE, GFP_KERNEL);
 	if (!dev->rx_req)
 		return -ENOMEM;
+
+	cmdbuf = dev->rx_req->buf;
 
 	dev->tx_req = fastboot_alloc_req(dev->in_ep, USB_BUFSIZ, GFP_KERNEL);
 	if (!dev->tx_req)
