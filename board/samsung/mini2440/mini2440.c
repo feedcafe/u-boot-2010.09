@@ -156,10 +156,6 @@ int board_init (void)
 	gpio->GPBDAT = 0x060;	/* LED34 is on */
 #endif
 
-#ifdef CONFIG_USB_GADGET_S3C2410
-	s3c2410_udc_probe(&mini2440_udc_pdata);
-#endif
-
 	return 0;
 }
 
@@ -191,5 +187,12 @@ int board_eth_init(bd_t *bis)
 	rc = usb_eth_initialize(bis);
 #endif
 	return rc;
+}
+#endif
+
+#ifdef CONFIG_USB_GADGET_S3C2410
+int board_udc_init(void)
+{
+	return s3c2410_udc_probe(&mini2440_udc_pdata);
 }
 #endif

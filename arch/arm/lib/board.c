@@ -70,6 +70,10 @@ extern int  AT91F_DataflashInit(void);
 extern void dataflash_print_info(void);
 #endif
 
+#ifdef CONFIG_USB_GADGET_S3C2410
+extern int board_udc_init();
+#endif
+
 #if defined(CONFIG_USB_LED) || defined(CONFIG_USB_G_LED)
 extern int usb_led_init(void);
 #endif
@@ -449,6 +453,10 @@ extern void davinci_eth_set_mac_addr (const u_int8_t *addr);
 	debug ("Reset Ethernet PHY\n");
 	reset_phy();
 #endif
+#endif
+
+#ifdef CONFIG_USB_GADGET_S3C2410
+	board_udc_init();
 #endif
 
 #if defined(CONFIG_USB_LED) || defined(CONFIG_USB_G_LED)
