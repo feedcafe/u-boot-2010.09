@@ -34,7 +34,7 @@
 #include <usb.h>
 
 #define USBD_VENDOR_ID	0x1987
-#define USBD_PRODUCT_ID	0x0727
+#define USBD_PRODUCT_ID	0x0827
 
 static struct usb_device *find_usbled_device(void)
 {
