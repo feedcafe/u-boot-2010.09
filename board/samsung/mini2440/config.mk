@@ -21,5 +21,6 @@
 # download area is 3300'0000
 #
 
-
 TEXT_BASE = 0x33F80000
+
+LDSCRIPT := $(TOPDIR)/board/$(BOARDDIR)/u-boot.lds
