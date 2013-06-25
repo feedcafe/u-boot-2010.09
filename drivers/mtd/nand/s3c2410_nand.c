@@ -174,7 +174,7 @@ int board_nand_init(struct nand_chip *nand)
 	tacls = 0;
 
 	cfg = 0;
-	cfg |= S3C2410_NFCONF_TACLS(tacls - 1);
+	cfg |= S3C2410_NFCONF_TACLS(tacls);
 	cfg |= S3C2410_NFCONF_TWRPH0(twrph0 - 1);
 	cfg |= S3C2410_NFCONF_TWRPH1(twrph1 - 1);
 	writel(cfg, &nand_reg->NFCONF);
