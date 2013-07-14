@@ -276,17 +276,6 @@
 #define STACK_BASE	0x33f00000
 #define STACK_SIZE	0x8000
 
-/* NAND Flash Controller */
-
-/* Offset */
-#define oNFCONF	0x00
-#define oNFCONT	0x04
-#define oNFCMD	0x08
-#define oNFADDR	0x0c
-#define oNFDATA	0x10
-#define oNFSTAT	0x20
-#define oNFECC	0x2c
-
 #define	CONFIG_LL_INIT_NAND_ONLY
 #define CONFIG_S3C2440_NAND_BOOT
 
