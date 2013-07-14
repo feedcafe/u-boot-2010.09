@@ -258,37 +258,7 @@ nand_load:
 #if !defined (CONFIG_SKIP_LOWLEVEL_INIT) && defined(CONFIG_LL_INIT_NAND_ONLY)
 	bl	cpu_init_crit
 #endif
-
-	@ reset NAND
-	mov	r1, #CONFIG_SYS_NAND_BASE
-	ldr	r2, =((7<<12)|(7<<8)|(7<<4)|(0<<0))
-	str	r2, [r1, #oNFCONF]
-	ldr	r2, [r1, #oNFCONF]
-	
-	ldr	r2, =( (1<<4)|(0<<1)|(1<<0) )	@ Active low CE Control 
-	str	r2, [r1, #oNFCONT]
-	ldr	r2, [r1, #oNFCONT]
-	
-	ldr	r2, =(0x6)	@ RnB Clear
-	str	r2, [r1, #oNFSTAT]
-	ldr	r2, [r1, #oNFSTAT]
-	
-	mov	r2, #0xff	@ RESET command
-	strb	r2, [r1, #oNFCMD]
-	
-	mov	r3, #0		@ wait
-1: 
-	add	r3, r3, #0x1
-	cmp	r3, #0xa
-	blt	1b
-2:
-	ldr	r2, [r1, #oNFSTAT]	@ wait ready
-	tst	r2, #0x4
-	beq	2b
-	
-	ldr	r2, [r1, #oNFCONT]
-	orr	r2, r2, #0x2	@ Flash Memory Chip Disable
-	str	r2, [r1, #oNFCONT]
+	bl	nand_ll_init
 
 	/* stack setup */
 	ldr	r0, _TEXT_BASE	/* upper 128 KiB: relocated uboot	*/
@@ -329,21 +299,6 @@ done_nand_read:
 
 done_relocate:
 
-#if defined(CONFIG_USE_IRQ) && defined(CONFIG_S3C2440)
-	/* In the case of the S3C2410, if we've somehow magically (JTAG, ...)
-	   ended up in RAM, then that ram is mapped to 0x30000000 and not 0.
-	   So we need to copy the interrupt vectors, etc.  */
-
-	mov	r0, #0
-	ldr	r1, _TEXT_BASE
-	mov	r2, #0x40
-irqvec_cpy_next:
-	ldr	r3, [r1], #4
-	str	r3, [r0], #4
-	subs	r2, r2, #4
-	bne	irqvec_cpy_next
-#endif /* CONFIG_USE_IRQ */
-
 #endif	/* CONFIG_SKIP_RELOCATE_UBOOT */
 
 #ifndef CONFIG_S3C2440_NAND_BOOT
@@ -383,9 +338,6 @@ clbss_l:str	r2, [r0]		/* clear loop...                    */
 	ldr	pc, _start_armboot
 
 _start_armboot:	.word start_armboot
-
-	.align 2
-DW_STACK_START:	.word STACK_BASE+STACK_SIZE-4
 
 /*
  *************************************************************************

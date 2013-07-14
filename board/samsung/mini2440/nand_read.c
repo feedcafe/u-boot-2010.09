@@ -43,11 +43,24 @@
 #define NAND_DETECT_RB	{ while (!(NFSTAT & (1<<2))); }
 
 #define BUSY 4
-inline void wait_idle(void) {
+inline void wait_idle(void)
+{
 	int i;
 
-	while(!(NFSTAT & BUSY))
-		for(i=0; i<10; i++);
+	while (!(NFSTAT & BUSY))
+		for ( i = 0; i < 10; i++);
+}
+
+void nand_ll_init(void)
+{
+	int i;
+
+	NFCONT = (1<<0);
+	NFCONF = ((1<<12) | (0<<8) | (3<<4) | (1<<0));
+
+	for (i = 0; i < 10; i++);
+	NFCMD = 0xFF;	//reset command
+	wait_idle();
 }
 
 static void s3c2440_write_addr_page_2k(unsigned addr, unsigned mask, unsigned page_size)
