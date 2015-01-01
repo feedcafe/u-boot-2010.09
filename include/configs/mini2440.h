@@ -174,9 +174,9 @@
 
 #define CONFIG_BOOTDELAY	9
 #define CONFIG_BOOTARGS_RAM	"root=/dev/ram0 rdinit=linuxrc " \
-				"console=ttySAC0"
+				"console=ttySAC0,115200"
 
-#define CONFIG_BOOTARGS_CRAMFS	"rdinit=linuxrc console=ttySAC0 " \
+#define CONFIG_BOOTARGS_CRAMFS	"rdinit=linuxrc console=ttySAC0,115200 " \
 				"root=1f03 rootfstype=cramfs"
 
 #define CONFIG_BOOTARGS		CONFIG_BOOTARGS_CRAMFS
