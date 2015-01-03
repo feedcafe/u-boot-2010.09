@@ -179,14 +179,23 @@
 #define CONFIG_BOOTARGS_CRAMFS	"rdinit=linuxrc console=ttySAC0,115200 " \
 				"root=1f03 rootfstype=cramfs"
 
-#define CONFIG_BOOTARGS		CONFIG_BOOTARGS_CRAMFS
+#define CONFIG_BOOTARGS_EXT4	"rdinit=linuxrc console=ttySAC0,115200 " \
+				"root=179:1 rw rootdelay=3 rootfstype=ext4"
+
+#define CONFIG_BOOTARGS_MMC	"rdinit=linuxrc console=ttySAC0,115200 " \
+				"root=/dev/mmcblk0p1 rw rootdelay=3 " \
+				"rootfstype=ext4"
+
+#define CONFIG_BOOTARGS		CONFIG_BOOTARGS_MMC
 
 #define CONFIG_ETHADDR		00:19:87:07:27:15
 #define CONFIG_NETMASK          255.255.255.0
 #define CONFIG_IPADDR		192.168.1.15
 #define CONFIG_SERVERIP		192.168.1.98
 #define CONFIG_BOOTFILE		"uImage"
-#define CONFIG_BOOTCOMMAND	"tftp 31000000 u-boot.bin; go 31000000"
+#define CONFIG_BOOTCMD_TFTP	"tftp 31000000 u-boot.bin; go 31000000"
+#define CONFIG_BOOTCMD_NAND	"nand read 33000000 80000 300000;bootm 33000000"
+#define CONFIG_BOOTCOMMAND	CONFIG_BOOTCMD_NAND
 
 #if defined(CONFIG_CMD_KGDB)
 #define CONFIG_KGDB_BAUDRATE	115200		/* speed to run kgdb serial port */
