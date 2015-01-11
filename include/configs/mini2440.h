@@ -166,11 +166,14 @@
 #define	CONFIG_USBD_PRODUCTID_GSERIAL	0x5120	/* gserial */
 #define	CONFIG_USBD_PRODUCTID_CDCACM	0x5119	/* CDC ACM */
 #endif
+
 #define	CONFIG_USBD_MANUFACTURER	"OpenMoko, Inc"
-#define	CONFIG_EXTRA_ENV_SETTINGS	\
-		"usbtty=cdc_acm\0"	\
+#define	CONFIG_EXTRA_ENV_SETTINGS				\
+		"usbtty=cdc_acm\0"				\
 		"stderr=usbtty\0stdout=usbtty\0stdin=usbtty\0"	\
-		"mtdparts=" MTDPARTS_DEFAULT "\0"
+		"mtdparts=" MTDPARTS_DEFAULT "\0"		\
+		"netdev=eth0\0"					\
+		"consoledev=ttySAC0\0"
 
 #define CONFIG_BOOTDELAY	3
 #define CONFIG_BOOTARGS_RAM	"root=/dev/ram0 rdinit=linuxrc " \
@@ -191,11 +194,27 @@
 #define CONFIG_ETHADDR		00:19:87:07:27:15
 #define CONFIG_NETMASK          255.255.255.0
 #define CONFIG_IPADDR		192.168.1.15
+#define CONFIG_GATEWAYIP	192.168.1.1
 #define CONFIG_SERVERIP		192.168.1.98
+
+#define CONFIG_LOADADDR		0x33000000	/*default location for tftp and bootm*/
+
 #define CONFIG_BOOTFILE		"uImage"
 #define CONFIG_BOOTCMD_TFTP	"tftp 31000000 u-boot.bin; go 31000000"
 #define CONFIG_BOOTCMD_NAND	"nand read 33000000 80000 300000;bootm 33000000"
-#define CONFIG_BOOTCOMMAND	CONFIG_BOOTCMD_NAND
+
+#define CONFIG_HOSTNAME		mini2440
+#define CONFIG_ROOTPATH		/opt/nfsroot
+
+#define CONFIG_BOOTCMD_NFS						\
+   "setenv bootargs root=/dev/nfs rw "                                  \
+      "nfsroot=$serverip:$rootpath "                                    \
+      "ip=$ipaddr:$serverip:$gatewayip:$netmask:$hostname:$netdev:off " \
+      "console=$consoledev,$baudrate $othbootargs;"                     \
+   "tftp $loadaddr $bootfile;"                                          \
+   "bootm $loadaddr"
+
+#define CONFIG_BOOTCOMMAND	CONFIG_BOOTCMD_NFS
 
 #if defined(CONFIG_CMD_KGDB)
 #define CONFIG_KGDB_BAUDRATE	115200		/* speed to run kgdb serial port */
@@ -226,6 +245,12 @@
 /* command history and autocompletion */
 #define	CONFIG_CMDLINE_EDITING
 #define	CONFIG_AUTO_COMPLETE
+
+/* Use the HUSH parser */
+#define CONFIG_SYS_HUSH_PARSER
+#ifdef  CONFIG_SYS_HUSH_PARSER
+#define CONFIG_SYS_PROMPT_HUSH_PS2 "> "
+#endif
 
 /*-----------------------------------------------------------------------
  * Stack sizes
